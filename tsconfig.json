@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "jsx": "react",
+        "rootDir": "src",
+        "outDir": "dist",
+        "target": "es6",
+        "module": "commonjs"
+    },
+    "typeAcquisition": {
+        "enable": true
+    }
+}
