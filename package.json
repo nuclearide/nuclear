@@ -8,6 +8,8 @@
   },
   "devDependencies": {
     "@types/electron": "^1.6.10",
+    "@types/react": "^16.0.34",
+    "@types/react-dom": "^16.0.3",
     "concurrently": "^3.5.1",
     "electron": "^1.7.10",
     "electron-builder": "^19.54.0",
@@ -21,15 +23,12 @@
   "author": "Simon Hochrein <simon@ministrycrm.com>",
   "license": "MIT",
   "scripts": {
-
     "dev": "concurrently \"yarn run dev-less\" \"yarn run dev-ts\"",
     "dev-less": "watch \"lessc src/less/index.less dist/css/index.css\" src/less",
     "dev-ts": "tsc -w",
-
     "build": "yarn run build-less && yarn run build-ts",
     "build-less": "lessc src/less/index.less dist/css/index.css",
     "build-ts": "tsc",
-
     "pkg": "electron-builder",
     "dist": "yarn run build && yarn run pkg",
     "start": "electron ."
