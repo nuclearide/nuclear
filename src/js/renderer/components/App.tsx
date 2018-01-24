@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {Grid} from 'semantic-ui-react';
+import { Editor } from './Editor';
 
 export default class App extends React.Component {
     render() {
@@ -10,6 +11,7 @@ export default class App extends React.Component {
                 </Grid.Column>
                 <Grid.Column width={10} className="panel">
                     Main Content
+                    <Editor/>
                 </Grid.Column>
                 <Grid.Column width={3} className="panel">
                     Settings
