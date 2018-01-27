@@ -14,8 +14,10 @@
     "concurrently": "^3.5.1",
     "electron": "^1.7.10",
     "electron-builder": "^19.54.0",
+    "husky": "^0.14.3",
     "less": "^2.7.3",
     "prettier": "^1.10.2",
+    "pretty-quick": "^1.2.3",
     "watch": "^1.0.2"
   },
   "name": "reactide",
@@ -34,6 +36,11 @@
     "pkg": "electron-builder",
     "dist": "yarn run build && yarn run pkg",
     "start": "electron ."
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   },
   "build": {
     "appId": "org.reactide-comunity.reactide",
