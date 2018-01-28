@@ -5,6 +5,7 @@ import { join } from 'path';
 import { ReactIDE } from '../ReactIDE';
 
 class Directory extends React.Component<{ path: string }, { files: { name: string, path: string, type: string }[], open: number[] }> {
+
     constructor(props) {
         super(props);
         this.state = { files: [], open: [] };
@@ -15,11 +16,11 @@ class Directory extends React.Component<{ path: string }, { files: { name: strin
                 {this.state.files.map((file, key) => {
                     return (
                         <List.Item key={key}>
-                            <List.Content floated="left" onClick={this.onClick.bind(this, file, key)}>
+                            <List.Content floated="left" onClick={this.onClick.bind(this, file, key)} className="entry">
+                                {file.type == 'dir' && <Icon name={this.state.open.indexOf(key) > -1 ? 'caret down' : 'caret right'} />}                            
+                                {file.type == 'file' && <Icon name={'file'} />}
                                 {file.name}
                             </List.Content>
-                            <List.Content floated="right">
-                                {file.type == 'dir' && <Icon onClick={this.onClick.bind(this, file, key)} name={this.state.open.indexOf(key) > -1 ? 'caret down' : 'caret right'} />}                            </List.Content>
                             <List.Content style={{paddingLeft: 10}}>
                                 {this.state.open.indexOf(key) > -1 && <Directory path={file.path} />}
                             </List.Content>

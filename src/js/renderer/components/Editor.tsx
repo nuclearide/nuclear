@@ -8,7 +8,7 @@ for(var mode of ['javascript', 'xml', 'jsx']) {
     require('codemirror/mode/'+mode+'/'+mode);
 }
 
-export class Editor extends React.Component {
+export class Editor extends React.Component<{filePath: string}, any> {
     private _editorElement: HTMLTextAreaElement;
 
     render() {
@@ -25,10 +25,8 @@ export class Editor extends React.Component {
             styleActiveLine: true
         } as EditorConfiguration);
         c.setSize("100%", "100%");
-        ReactIDE.Editor.on('open', (filePath) => {
-            readFile(filePath, 'utf8', (error, file) => {
-                c.setValue(file);
-            });
-        })
+        readFile(this.props.filePath, 'utf8', (error, file) => {
+            c.setValue(file);
+        });
     }
 }

@@ -1,4 +1,5 @@
 import * as EventEmitter from 'events';
+import {ipcRenderer} from 'electron';
 
 const EditorEvents = new EventEmitter();
 
@@ -15,3 +16,7 @@ export namespace ReactIDE {
         }
     }
 }
+
+ipcRenderer.on('save', () => {
+    
+});
