@@ -18,10 +18,10 @@ export default class TabBar extends React.Component<any, {files: string[], activ
         return (
             (this.state.files.length > 0 && <div>
                 <div className="ui top attached tabular menu">
-                    {this.state.files.map((file, key) => <div key={key} className={"item"+(this.state.activeIndex == key ? ' active' : '')} onClick={() => {this.setState({activeIndex: key})}}>{file}<Icon name="close" onClick={this.close.bind(this, key)}/></div>)}
+                    {this.state.files.map((file, key) => <div key={key} className={"item"+(this.state.activeIndex == key ? ' active' : ' inverted')} onClick={() => {this.setState({activeIndex: key})}}>{file}<Icon name="close" onClick={this.close.bind(this, key)}/></div>)}
                 </div>
                 <div className="ui bottom attached active tab segment">
-                    {this.state.files.map((file, key) => <div key={key} style={{display: this.state.activeIndex == key ? 'block' : 'none'}}><Editor filePath={file}/></div>)}
+                    {this.state.files.map((file, key) => <div key={key} style={{display: this.state.activeIndex == key ? 'block' : 'none'}}><Editor filePath={file} active={this.state.activeIndex == key}/></div>)}
                 </div>
             </div>) || (
                 <h1>Welcome to ReactIDE</h1>

@@ -8,7 +8,13 @@ export namespace ReactIDE {
         static open(filePath: string) {
             EditorEvents.emit('open', filePath);
         }
-        static on(name, cb) {
+        static saveAll() {
+            EditorEvents.emit('save');
+        }
+        static externalChange(type: string, file: string): void {
+            EditorEvents.emit('externalChange', type, file);
+        }
+        static on(name: string, cb: (...data: any[]) => void) {
             EditorEvents.on(name, cb);
         }
         static once(...args) {
@@ -17,6 +23,18 @@ export namespace ReactIDE {
     }
 }
 
+ipcRenderer.on('open', () => {
+    EditorEvents.emit('open');
+});
+
 ipcRenderer.on('save', () => {
-    
+    EditorEvents.emit('save');
+});
+
+ipcRenderer.on('goToFile', () => {
+    alert('Go To File');
+});
+
+ipcRenderer.on('commandPalette', () => {
+    alert("Command Palette");
 });

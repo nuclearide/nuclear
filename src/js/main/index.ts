@@ -42,6 +42,56 @@ app.on("ready", () => {
           }
         }
       ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        {
+          role: 'cut'
+        },
+        {
+          role: 'copy'
+        },
+        {
+          role: 'paste'
+        }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Open Command Palette',
+          accelerator: 'CommandOrControl+Shift+P',
+          click: () => {
+            window.webContents.send('commandPalette');
+          }
+        }
+      ]
+    },
+    {
+      label: 'Go',
+      submenu: [
+        {
+          label: 'Go to File',
+          accelerator: 'CommandOrControl+P',
+          click: () => {
+            window.webContents.send('goToFile');
+          }
+        }
+      ]
+    },
+    {
+      label: 'Developer',
+      submenu: [
+        {
+          label: 'Reload',
+          accelerator: 'CommandOrControl+R',
+          click: () => {
+            window.reload();
+          }
+        }
+      ]
     }
   ]);
 

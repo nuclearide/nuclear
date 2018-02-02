@@ -1,6 +1,6 @@
 import { List, Icon } from 'semantic-ui-react';
 import * as React from 'react';
-import { readdir, statSync } from 'fs';
+import { readdir, statSync, watch, FSWatcher } from 'fs';
 import { join } from 'path';
 import { ReactIDE } from '../ReactIDE';
 
@@ -17,18 +17,18 @@ class Directory extends React.Component<{ path: string }, { files: { name: strin
                     return (
                         <List.Item key={key}>
                             <List.Content floated="left" onClick={this.onClick.bind(this, file, key)} className="entry">
-                                {file.type == 'dir' && <Icon name={this.state.open.indexOf(key) > -1 ? 'caret down' : 'caret right'} />}                            
+                                {file.type == 'dir' && <Icon name={this.state.open.indexOf(key) > -1 ? 'caret down' : 'caret right'} />}
                                 {file.type == 'file' && <Icon name={'file'} />}
                                 {file.name}
                             </List.Content>
-                            <List.Content style={{paddingLeft: 10}}>
+                            <List.Content style={{ paddingLeft: 10 }}>
                                 {this.state.open.indexOf(key) > -1 && <Directory path={file.path} />}
                             </List.Content>
                         </List.Item>
                     );
                 })}
                 {
-                    this.state.files.length == 0 && 
+                    this.state.files.length == 0 &&
                     <List.Item>
                         No Items
                     </List.Item>
@@ -37,7 +37,7 @@ class Directory extends React.Component<{ path: string }, { files: { name: strin
         )
     }
     onClick(file, key) {
-        if(file.type === 'dir') {
+        if (file.type === 'dir') {
             this.toggleFolder(key);
         } else {
             ReactIDE.Editor.open(file.path);
@@ -69,10 +69,36 @@ class Directory extends React.Component<{ path: string }, { files: { name: strin
     }
 }
 
+var debounce = function (func, wait, immediate?) {
+    var timeout;
+    return function () {
+        var context = this, args = arguments;
+        var later = function () {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
+};
+
 export default class FileExplorer extends React.Component<any, any> {
+    watch: FSWatcher;
+
     render() {
         return (
             <Directory path="." />
         );
+    }
+    componentDidMount() {
+        var onChange = debounce((type, file) => {
+            ReactIDE.Editor.externalChange(type, file);
+        }, 1000);
+        this.watch = watch('.', { recursive: true }, onChange);
+    }
+    componentWillUnmount() {
+        this.watch.close();
     }
 }

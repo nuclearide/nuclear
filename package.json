@@ -1,4 +1,21 @@
 {
+  "name": "reactide",
+  "version": "0.0.1",
+  "main": "dist/js/main/index.js",
+  "repository": "https://github.com/reactide-community/reactide.git",
+  "author": "Simon Hochrein <simon@ministrycrm.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently \"yarn run dev-less\" \"yarn run dev-ts\"",
+    "dev-less": "watch \"lessc src/less/index.less dist/css/index.css\" src/less",
+    "dev-ts": "tsc -w",
+    "build": "yarn run build-less && yarn run build-ts",
+    "build-less": "lessc src/less/index.less dist/css/index.css",
+    "build-ts": "tsc",
+    "pkg": "electron-builder",
+    "dist": "yarn run build && yarn run pkg",
+    "start": "electron ."
+  },
   "dependencies": {
     "codemirror": "^5.33.0",
     "react": "^16.2.0",
@@ -19,23 +36,6 @@
     "prettier": "^1.10.2",
     "pretty-quick": "^1.2.3",
     "watch": "^1.0.2"
-  },
-  "name": "reactide",
-  "version": "0.0.1",
-  "main": "dist/js/main/index.js",
-  "repository": "https://github.com/reactide-community/reactide.git",
-  "author": "Simon Hochrein <simon@ministrycrm.com>",
-  "license": "MIT",
-  "scripts": {
-    "dev": "concurrently \"yarn run dev-less\" \"yarn run dev-ts\"",
-    "dev-less": "watch \"lessc src/less/index.less dist/css/index.css\" src/less",
-    "dev-ts": "tsc -w",
-    "build": "yarn run build-less && yarn run build-ts",
-    "build-less": "lessc src/less/index.less dist/css/index.css",
-    "build-ts": "tsc",
-    "pkg": "electron-builder",
-    "dist": "yarn run build && yarn run pkg",
-    "start": "electron ."
   },
   "husky": {
     "hooks": {

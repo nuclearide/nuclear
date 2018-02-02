@@ -12,7 +12,6 @@ export default class App extends React.Component {
                     <FileExplorer/>
                 </Grid.Column>
                 <Grid.Column width={10} className="panel">
-                    Main Content
                     <TabBar/>
                 </Grid.Column>
                 <Grid.Column width={3} className="panel">
