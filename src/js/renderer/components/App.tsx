@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {Grid} from 'semantic-ui-react';
-import { Editor } from './Editor';
 import FileExplorer from './FileExplorer';
 import TabBar from './TabBar';
 

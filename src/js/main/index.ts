@@ -40,6 +40,13 @@ app.on("ready", () => {
           click: (item, browserWindow) => {
             browserWindow.webContents.send("save");
           }
+        },
+        {
+          label: 'Close',
+          accelerator: 'CommandOrControl+W',
+          click: (item, browserWindow) => {
+            browserWindow.webContents.send("close");
+          }
         }
       ]
     },
