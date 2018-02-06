@@ -3,7 +3,7 @@ import {ipcRenderer} from 'electron';
 
 const EditorEvents = new EventEmitter();
 
-type EditorEvent = "open" | "close" | "focus";
+type EditorEvent = "open" | "close" | "focus" | "save";
 
 
 export namespace ReactIDE {

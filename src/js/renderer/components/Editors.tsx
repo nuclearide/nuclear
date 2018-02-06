@@ -91,14 +91,14 @@ export class Editors extends React.Component<{}, {files: string[], active: numbe
                 c.swapDoc(Doc('', 'text/plain'));
             }
         });
-        // ReactIDE.Editor.on('save', () => {
-        //     this.isSaving = true;
-        //     // writeFileSync(this.props.files[this.props.active], c.getValue());
-        //     // onChange(false);
-        //     setTimeout(() => {
-        //         this.isSaving = false;
-        //     }, 2000);
-        // });
+        ReactIDE.Editor.on('save', () => {
+            // this.isSaving = true;
+            writeFileSync(this.state.files[this.state.active], c.getValue());
+            // onChange(false);
+            // setTimeout(() => {
+            //     this.isSaving = false;
+            // }, 2000);
+        });
         // ReactIDE.Editor.on('externalChange', (type, filePath) => {
         //     console.log(this.isSaving);
         //     if (filePath == this.props.files[this.props.active] && !this.isSaving) {
