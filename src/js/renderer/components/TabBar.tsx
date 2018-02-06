@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Tab, Icon } from "semantic-ui-react";
-import { ReactIDE } from "../ReactIDE";
+import { ReactIDE } from "../../ReactIDE";
 import { Editors } from "./Editors";
 
 export default class TabBar extends React.Component<any, { files: string[], changed: number[], active: string }> {

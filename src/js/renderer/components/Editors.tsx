@@ -1,7 +1,7 @@
 import * as React from "react";
 import 'codemirror/addon/selection/active-line';
 import { EditorConfiguration, fromTextArea, Doc } from "codemirror";
-import { ReactIDE } from "../ReactIDE";
+import { ReactIDE } from "../../ReactIDE";
 import { readFile, writeFileSync } from "fs";
 import { parse } from "path";
 
@@ -30,12 +30,6 @@ export class Editors extends React.Component<{}, {files: string[], active: numbe
     private isSaving;
     private docs: { [filename: string]: Doc } = {};
 
-    private fileTypeMap = {
-        ".tsx": "text/typescript-jsx",
-        ".md": "markdown",
-        ".less": "css",
-        ".txt": "text/plain"
-    };
     constructor(props) {
         super(props);
         this.state = {
@@ -69,7 +63,7 @@ export class Editors extends React.Component<{}, {files: string[], active: numbe
             var {files, active} = this.state;
             active = files.length;
             files.push(file);
-            this.docs[file] = Doc('', 'css');
+            this.docs[file] = Doc('', ReactIDE.FileTypes.getForFile(parse(file).base));
             c.swapDoc(this.docs[file]);
             readFile(files[active], 'utf8', (error, file) => {
                 c.setValue(file);

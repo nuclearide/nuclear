@@ -2,7 +2,7 @@ import { List, Icon } from 'semantic-ui-react';
 import * as React from 'react';
 import { readdir, statSync, watch, FSWatcher } from 'fs';
 import { join } from 'path';
-import { ReactIDE } from '../ReactIDE';
+import { ReactIDE } from '../../ReactIDE';
 
 class Directory extends React.Component<{ path: string }, { files: { name: string, path: string, type: string }[], open: number[] }> {
 
