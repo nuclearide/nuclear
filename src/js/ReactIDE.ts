@@ -4,6 +4,7 @@ import { ipcRenderer } from 'electron';
 const EditorEvents = new EventEmitter();
 let _plugins: {[name: string]: ReactIDE.Plugin} = {};
 let _fileTypes: {match: RegExp, type: string}[] = [];
+let _completionProvider: ReactIDE.CompletionProvider;
 
 type EditorEvent = "open" | "close" | "focus" | "save";
 
@@ -68,6 +69,24 @@ export namespace ReactIDE {
                 return fileType.match.test(fileName);
             })
             return (match && match.type) || 'text/plain';
+        }
+    }
+    export interface Completion {
+
+    }
+    export interface CompletionProvider {
+        loadFile(file: string): boolean;
+        getAtCursor(cur: CodeMirror.Position, file: string, cb: (list: string[]) => void);
+    }
+    export class CompletionProviders {
+        static add(provider: CompletionProvider) {
+            _completionProvider = provider;
+        }
+        static remove(provider: CompletionProvider) {
+            _completionProvider = null;
+        }
+        static get() {
+            return _completionProvider;
         }
     }
 }
