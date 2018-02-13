@@ -1,12 +1,10 @@
 import {spawn, ChildProcess} from 'child_process';
 import { ReactIDE } from '../../ReactIDE';
 import { EventEmitter } from 'events';
-
-var dir = "/Users/simonhochrein/Documents/GitHub/reactide";
-
-var proc: ChildProcess = spawn(dir+'/node_modules/typescript/bin/tsserver', [], {
-    cwd: dir
-});;
+import * as ts from 'typescript';
+import { readFileSync } from 'fs';
+import * as CodeMirror from 'codemirror';
+import { normalize } from 'path';
 
 export default class TSServer {
     private tsserver = new TSServerProvider;
@@ -16,77 +14,56 @@ export default class TSServer {
     }
     onUnload() {
         ReactIDE.CompletionProviders.remove(this.tsserver);
-        proc.kill();
     }
 }
+
+class ReactIDELanguageServiceHost implements ts.LanguageServiceHost {
+    files: {[name: string]: ts.IScriptSnapshot} = {};
+    getScriptSnapshot(fileName: string): ts.IScriptSnapshot {
+        return this.files[fileName];
+    }
+    getCurrentDirectory() {
+        return __dirname;
+    }
+    getDefaultLibFileName(options: ts.CompilerOptions) {
+        return "lib.d.ts";
+    }
+    getCompilationSettings() {
+        return ts.getDefaultCompilerOptions();
+    }
+    getScriptFileNames() {
+        return Object.keys(this.files);
+    }
+    getScriptVersion() {
+        return "";
+    }
+    addFile(fileName, text) {
+        this.files[fileName] = ts.ScriptSnapshot.fromString(text);
+    }
+}
+
+var s = new ReactIDELanguageServiceHost;
+var r = ts.createDocumentRegistry();
+
+var service = ts.createLanguageService(s);
+s.addFile('lib.d.ts', readFileSync(normalize('node_modules/typescript/lib/lib.d.ts'), 'utf8'));
+
 
 class TSServerProvider implements ReactIDE.CompletionProvider {
     events = new EventEmitter();
-    constructor() {
-        var buffer = "";
-        var bufferLength = 0;
-        proc.stdout.on('data', (data) => {
-            var string = data.toString();
-            if(!buffer) {
-                var segments = string.split('\n');
-                var segment = segments[0];
-                let length = parseInt(segment.slice("Content-Length: ".length, segment.length));
-
-                if(segments[2].length + 1 !== length) {
-                    buffer+=segments[2];
-                    bufferLength = length;
-                } else {
-                    this._procEvent(JSON.parse(segments[2]));
-                }
-            } else {
-                if(buffer.length + string.length == bufferLength) {
-                    this._procEvent(JSON.parse(buffer+string));
-                    buffer = '';
-                    bufferLength = 0;
-                } else {
-                    buffer+=string;
-                }
-            }
-
-        });
-    }
-    private _procEvent(obj) {
-        switch(obj.request_seq) {
-            case 4:
-                this.events.emit('completions', obj.body);
-        }
-    }
     loadFile(filePath) {
-        this._send({
-            "seq":1,
-            "type":"quickinfo",
-            "command":"open",
-            "arguments":{
-                "file":dir+"/"+filePath
-            }
-        });
+        s.addFile(filePath, readFileSync(filePath, 'utf8'));
         return true;
     }
     getAtCursor(cursor: CodeMirror.Position, filePath, cb: (list: string[]) => void) {
-        this._send({
-            "seq":4,
-            "type":"quickinfo",
-            "command":"completions",
-            "arguments":{
-                "file":dir+"/"+filePath,
-                "line": cursor.line,
-                "offset": cursor.ch,
-                "prefix": ""
-            }
-        });
-        this.events.once('completions', (list) => {
-            var completions = list.map(({name}) => {
-                return name;
-            });
-            cb(completions);
-        });
-    }
-    private _send(message) {
-        proc.stdin.write(JSON.stringify(message)+'\n');
+        var {entries} = service.getCompletionsAtPosition("./index.ts", 0, {includeExternalModuleExports: true});
+        cb(entries.map(({name}) => name));
     }
 }
+
+// function crawl(node: ts.Node) {
+//     (node.kind==ts.SyntaxKind.JsxElement || node.kind==ts.SyntaxKind.JsxSelfClosingElement || node.kind==ts.SyntaxKind.JsxText) && console.log(node.getText());
+//     node.forEachChild((newNode) => {
+//         crawl(newNode);
+//     })
+// }

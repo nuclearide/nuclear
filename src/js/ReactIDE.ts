@@ -1,5 +1,6 @@
 import * as EventEmitter from 'events';
 import { ipcRenderer } from 'electron';
+import * as CodeMirror from 'codemirror';
 
 const EditorEvents = new EventEmitter();
 let _plugins: {[name: string]: ReactIDE.Plugin} = {};
