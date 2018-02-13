@@ -55,9 +55,12 @@ class TSServerProvider implements ReactIDE.CompletionProvider {
         s.addFile(filePath, readFileSync(filePath, 'utf8'));
         return true;
     }
-    getAtCursor(cursor: CodeMirror.Position, filePath, cb: (list: string[]) => void) {
-        var {entries} = service.getCompletionsAtPosition("./index.ts", 0, {includeExternalModuleExports: true});
-        cb(entries.map(({name}) => name));
+    getAtPosition(index: number, token: string, filePath, cb: (list: string[]) => void) {
+        // console.log(arguments);
+        var {entries} = service.getCompletionsAtPosition(filePath, index, {includeExternalModuleExports: true});
+        // console.log(service.getCompletionEntryDetails(filePath, index, entries[0].name, undefined, undefined));
+
+        cb(entries.filter(({name}) => name.slice(0,token.length) == token).map(({name}) => name));
     }
 }
 

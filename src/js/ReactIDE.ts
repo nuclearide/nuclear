@@ -9,7 +9,6 @@ let _completionProvider: ReactIDE.CompletionProvider;
 
 type EditorEvent = "open" | "close" | "focus" | "save";
 
-
 export namespace ReactIDE {
     export class Editor {
         static open(filePath: string) {
@@ -77,7 +76,7 @@ export namespace ReactIDE {
     }
     export interface CompletionProvider {
         loadFile(file: string): boolean;
-        getAtCursor(cur: CodeMirror.Position, file: string, cb: (list: string[]) => void);
+        getAtPosition(cur: number, token: string, file: string, cb: (list: string[]) => void);
     }
     export class CompletionProviders {
         static add(provider: CompletionProvider) {

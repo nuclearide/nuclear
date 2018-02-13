@@ -8,6 +8,10 @@ var types = [
     {
         match: /\.tsx/,
         type: 'text/typescript-jsx'
+    },
+    {
+        match: /\.ts/,
+        type: 'text/typescript'
     }
 ]
 

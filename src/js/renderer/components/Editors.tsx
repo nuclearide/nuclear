@@ -44,7 +44,7 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
         return (
             <div style={{ position: 'relative' }}>
                 <textarea ref={e => this._editorElement = e} style={{ height: '80%' }}></textarea>
-                <ul ref={e => this._completionElement = e} style={{ height: 100, width: 'auto', padding: 5, display: 'block', background: 'gray', position: 'absolute', zIndex: 1000 }}>
+                <ul ref={e => this._completionElement = e} style={{ height: 100, width: 'auto', padding: 5, display: this.state.completions.length > 0 ? 'block' : 'none', background: 'gray', position: 'absolute', zIndex: 1000, overflow: 'scroll' }}>
                     {this.state.completions.map((completion, key) => <li key={key}>{completion}</li>)}
                 </ul>
             </div>
@@ -56,7 +56,8 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             lineNumbers: true,
             styleActiveLine: true
         } as EditorConfiguration);
-        c.setSize("100%", "100%");
+        c.setSize("100%", "80%");
+        var complete = debounce(this._complete.bind(this), 500);
 
         // var onChange = debounce(this.props.onChange, 500);
 
@@ -67,11 +68,11 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             var rect = this._editorElement.nextElementSibling.getBoundingClientRect();
             var cur = c.getDoc().getCursor(), token = c.getTokenAt(cur);
             let { left, top } = c.cursorCoords(true);
-            var completionList = ReactIDE.CompletionProviders.get().getAtCursor(cur, this.state.files[this.state.active], (list) => {
-                this.setState({completions: list});
-            });
+            var index = c.getDoc().indexFromPos(cur);
+            
             this._completionElement.style.left = (left - rect.left) + 'px';
             this._completionElement.style.top = (top - rect.top) + 'px';
+            complete(index, token.string);
         })
 
         ReactIDE.Editor.on('open', (file) => {
@@ -119,5 +120,11 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
         //         }
         //     }
         // })
+    }
+
+    private _complete(index, token) {
+        ReactIDE.CompletionProviders.get().getAtPosition(index, token, this.state.files[this.state.active], (list) => {
+            this.setState({completions: list});
+        });
     }
 }
