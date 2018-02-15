@@ -19,7 +19,7 @@ export default class TabBar extends React.Component<any, { files: string[], chan
 
     render() {
         return (
-            <div>
+            <div className="panel-column">
                 <div style={{ display: this.state.files.length > 0 ? 'block' : 'none' }}>
                     <div className="ui top attached tabular menu">
                         {this.state.files.map((file, key) =>

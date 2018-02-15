@@ -1,6 +1,10 @@
 @import "editor";
+
+@background: #23262F;
+
 body {
     font-family: 'Fira Mono';
+    background-color: @background!important;
 }
 
 html, body, #root, #main-grid {
@@ -8,13 +12,15 @@ html, body, #root, #main-grid {
 }
 
 #main-grid {
-    background-color: #23262F;
+    background-color: @background;
     color: #969DAE;
 }
 
 .panel {
-    background-color: #23262F;
+    background-color: @background;
     border: solid 1px #1D2025;
+    display: flex!important;
+    flex-direction: column;
 }
 
 .entry {
@@ -25,4 +31,7 @@ html, body, #root, #main-grid {
     &:hover {
         background: rgba(0, 0, 0, .5);
     }
+}
+.panel-column {
+    flex: 1;
 }

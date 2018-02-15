@@ -3,7 +3,8 @@ import { app, BrowserWindow, Menu, MenuItem } from "electron";
 app.on("ready", () => {
   const window = new BrowserWindow({
     width: 600,
-    height: 400
+    height: 400,
+    backgroundColor: '#23262F'
   });
   window.loadURL(`file://${__dirname}/../../index.html`);
   window.maximize();

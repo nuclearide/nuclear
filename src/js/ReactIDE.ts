@@ -77,6 +77,7 @@ export namespace ReactIDE {
     export interface CompletionProvider {
         loadFile(file: string): boolean;
         getAtPosition(cur: number, token: string, file: string, cb: (list: string[]) => void);
+        updateFile(filePath: string, source: string);
     }
     export class CompletionProviders {
         static add(provider: CompletionProvider) {

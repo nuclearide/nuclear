@@ -14,4 +14,4 @@ addEventListener('beforeunload', () => {
     for(var plugin in ReactIDE.Plugins.plugins()) {
         ReactIDE.Plugins.unload(plugin);
     }
-})
+});

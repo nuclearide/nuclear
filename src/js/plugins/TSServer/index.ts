@@ -47,6 +47,7 @@ var r = ts.createDocumentRegistry();
 
 var service = ts.createLanguageService(s);
 s.addFile('lib.d.ts', readFileSync(normalize('node_modules/typescript/lib/lib.d.ts'), 'utf8'));
+s.addFile('node_modules/@types/node/index.d.ts', readFileSync(normalize('node_modules/@types/node/index.d.ts'), 'utf8'));
 
 
 class TSServerProvider implements ReactIDE.CompletionProvider {
@@ -57,10 +58,18 @@ class TSServerProvider implements ReactIDE.CompletionProvider {
     }
     getAtPosition(index: number, token: string, filePath, cb: (list: string[]) => void) {
         // console.log(arguments);
-        var {entries} = service.getCompletionsAtPosition(filePath, index, {includeExternalModuleExports: true});
-        // console.log(service.getCompletionEntryDetails(filePath, index, entries[0].name, undefined, undefined));
+        // console.log(index);
+        var {entries} = service.getCompletionsAtPosition(filePath, index, {includeExternalModuleExports: true, includeInsertTextCompletions: true});
+        var list = entries.filter(({name}) => name.slice(0,token.length) == token).map(({name})=>name);
+        console.log(list);
+        cb(list);
+    }
+    getCompletionDetails(filePath: string, index: number, name: string) {
 
-        cb(entries.filter(({name}) => name.slice(0,token.length) == token).map(({name}) => name));
+    }
+
+    updateFile(filePath, source) {
+        s.files[filePath] = ts.ScriptSnapshot.fromString(source);
     }
 }
 
