@@ -3,6 +3,7 @@ import { ipcRenderer } from 'electron';
 import * as CodeMirror from 'codemirror';
 
 const EditorEvents = new EventEmitter();
+const WindowEvents = new EventEmitter();
 let _plugins: {[name: string]: ReactIDE.Plugin} = {};
 let _fileTypes: {match: RegExp, type: string}[] = [];
 let _completionProvider: ReactIDE.CompletionProvider;
@@ -11,8 +12,8 @@ type EditorEvent = "open" | "close" | "focus" | "save";
 
 export namespace ReactIDE {
     export class Editor {
-        static open(filePath: string) {
-            EditorEvents.emit('open', filePath);
+        static open(filePath: string, pos?: number) {
+            EditorEvents.emit('open', filePath, pos);
         }
         static saveAll() {
             EditorEvents.emit('save');
@@ -75,9 +76,11 @@ export namespace ReactIDE {
 
     }
     export interface CompletionProvider {
-        loadFile(file: string): boolean;
+        loadFile(filePath: string): boolean;
         getAtPosition(cur: number, token: string, file: string, cb: (list: string[]) => void);
         updateFile(filePath: string, source: string);
+        change(filePath: string, text: string);
+        definition(filePath: string, position: number);
     }
     export class CompletionProviders {
         static add(provider: CompletionProvider) {
@@ -88,6 +91,11 @@ export namespace ReactIDE {
         }
         static get() {
             return _completionProvider;
+        }
+    }
+    export class Window {
+        static on(name: 'close', cb: (...data: any[]) => void) {
+            WindowEvents.on(name, cb);
         }
     }
 }
@@ -111,3 +119,7 @@ ipcRenderer.on('goToFile', () => {
 ipcRenderer.on('commandPalette', () => {
     alert("Command Palette");
 });
+
+window.addEventListener('beforeunload', () => {
+    WindowEvents.emit('close');
+})

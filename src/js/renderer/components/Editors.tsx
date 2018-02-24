@@ -1,9 +1,9 @@
 import * as React from "react";
 import 'codemirror/addon/selection/active-line';
-import { EditorConfiguration, fromTextArea, Doc, Pass } from "codemirror";
+import { EditorConfiguration, fromTextArea, Doc, Position, Pass } from "codemirror";
 import { ReactIDE } from "../../ReactIDE";
 import { readFile, writeFileSync } from "fs";
-import { parse } from "path";
+import { parse, join, resolve } from "path";
 
 for (var mode of ['javascript', 'xml', 'jsx', 'css', 'markdown']) {
     require('codemirror/mode/' + mode + '/' + mode);
@@ -63,7 +63,11 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
 
         // var onChange = debounce(this.props.onChange, 500);
         c.on('change', (e, change) => {
+            // console.log(change);
             if(change.origin && change.origin.charAt(0) == '+') {
+                
+                ReactIDE.CompletionProviders.get().change(this.state.files[this.state.active], c.getDoc().getValue());
+
                 var rect = this._editorElement.nextElementSibling.getBoundingClientRect();
                 var cur = c.getDoc().getCursor();
                 let { left, top } = c.cursorCoords(true);
@@ -71,9 +75,9 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
                 this._completionElement.style.top = (top - rect.top) + 'px';
                 var token = c.getTokenAt(cur);
                 var index = c.getDoc().indexFromPos(cur);
-                updateFile(this.state.files[this.state.active], c.getDoc().getValue());
+                // updateFile(this.state.files[this.state.active], c.getDoc().getValue());
                 if(/[a-zA-Z]+/.test(change.text[0])) {
-                    complete(index, token.string);
+                    complete(c.getDoc().indexFromPos(cur), token.string);
                 } else {
                     this.setState({completions: []});
                 }
@@ -117,12 +121,30 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
                     d.replaceRange(this.state.completions[this.state.completionFocus], {ch: pos.start, line}, {ch: pos.end, line});
                     this.setState({completions: []});
                 }
+            },
+
+            "Alt-LeftClick": (e, pos) => {
+                var definitions = ReactIDE.CompletionProviders.get().definition(this.state.files[this.state.active], c.getDoc().indexFromPos(pos));
+                if(definitions) {
+                    console.log(definitions);
+                    // c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
+                    if(definitions[0].fileName != this.state.files[this.state.active]) {
+                        ReactIDE.Editor.open(definitions[0].fileName, definitions[0].textSpan.start);
+                    } else {
+                        c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
+                    }
+                }
             }
         });
 
 
-        ReactIDE.Editor.on('open', (file) => {
+        ReactIDE.Editor.on('open', (file, index) => {
             var { files, active } = this.state;
+            let i;
+            if((i = files.indexOf(file)) > -1) {
+                ReactIDE.Editor.focus(file);
+                return;
+            }
             active = files.length;
             files.push(file);
             this.docs[file] = Doc('', ReactIDE.FileTypes.getForFile(parse(file).base));
@@ -131,6 +153,9 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             readFile(files[active], 'utf8', (error, file) => {
                 c.setValue(file);
                 c.focus();
+                if(index) {
+                    c.getDoc().setCursor(c.getDoc().posFromIndex(index));
+                }
             });
             this.setState({ files, active });
         });
@@ -141,6 +166,7 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             if (filePath) {
                 if (this.docs[filePath]) {
                     c.swapDoc(this.docs[filePath]);
+                    this.setState({active: this.state.files.indexOf(filePath)});
                 } else {
                     throw new Error("File not found");
                 }
@@ -168,8 +194,8 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
         // })
     }
 
-    private _complete(index, token) {
-        ReactIDE.CompletionProviders.get().getAtPosition(index, token, this.state.files[this.state.active], (list) => {
+    private _complete(position: number, token) {
+        ReactIDE.CompletionProviders.get().getAtPosition(position, token, this.state.files[this.state.active], (list) => {
             this.setState({ completions: list, completionFocus: 0 });
         });
     }

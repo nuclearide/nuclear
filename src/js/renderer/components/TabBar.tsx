@@ -2,8 +2,11 @@ import * as React from "react";
 import { Tab, Icon } from "semantic-ui-react";
 import { ReactIDE } from "../../ReactIDE";
 import { Editors } from "./Editors";
+import { parse } from "path";
 
 export default class TabBar extends React.Component<any, { files: string[], changed: number[], active: string }> {
+    files: {[file: string]: HTMLDivElement} = {};
+
     constructor(props) {
         super(props);
         this.state = {
@@ -21,10 +24,10 @@ export default class TabBar extends React.Component<any, { files: string[], chan
         return (
             <div className="panel-column">
                 <div style={{ display: this.state.files.length > 0 ? 'block' : 'none' }}>
-                    <div className="ui top attached tabular menu">
+                    <div className="ui top attached tabular menu" style={{overflowX: 'auto', overflowY: 'hidden'}}>
                         {this.state.files.map((file, key) =>
-                            <div key={key} className={"item" + (this.state.active == file ? ' active' : ' inverted')} onClick={() => { this.select(file) }}>
-                                {file}
+                            <div key={key} className={"item" + (this.state.active == file ? ' active' : ' inverted')} onClick={() => { this.select(file) }} ref={e => this.files[file] = e}>
+                                {parse(file).base}
                                 <Icon name="asterisk" style={{ display: ~this.state.changed.indexOf(key) ? 'inline-block' : 'none' }} />
                                 <Icon name="close" onClick={this.close.bind(this, file)} />
                             </div>
@@ -45,8 +48,14 @@ export default class TabBar extends React.Component<any, { files: string[], chan
     componentDidMount() {
         ReactIDE.Editor.on('open', (filePath) => {
             var files = this.state.files;
-            files.push(filePath);
-            this.setState({ files, active: files[files.length - 1] });
+            let i;
+            if((i = files.indexOf(filePath)) > -1) {
+                this.setState({active: filePath});
+                return;
+            } else {
+                files.push(filePath);
+                this.setState({ files, active: files[files.length - 1] });
+            }
         });
         ReactIDE.Editor.on('close', (file) => {
             if (!file) {

@@ -1,8 +1,10 @@
 import { List, Icon } from 'semantic-ui-react';
 import * as React from 'react';
 import { readdir, statSync, watch, FSWatcher } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { ReactIDE } from '../../ReactIDE';
+
+var root = resolve(".");
 
 class Directory extends React.Component<{ path: string }, { files: { name: string, path: string, type: string }[], open: number[] }> {
 
@@ -89,14 +91,14 @@ export default class FileExplorer extends React.Component<any, any> {
 
     render() {
         return (
-            <Directory path="." />
+            <Directory path={root} />
         );
     }
     componentDidMount() {
         var onChange = debounce((type, file) => {
             ReactIDE.Editor.externalChange(type, file);
         }, 1000);
-        this.watch = watch('.', { recursive: true }, onChange);
+        this.watch = watch(root, { recursive: true }, onChange);
     }
     componentWillUnmount() {
         this.watch.close();

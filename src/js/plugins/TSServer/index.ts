@@ -1,11 +1,11 @@
-import {spawn, ChildProcess} from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import { ReactIDE } from '../../ReactIDE';
 import { EventEmitter } from 'events';
 import * as ts from 'typescript';
 import { readFileSync } from 'fs';
 import * as CodeMirror from 'codemirror';
-import { normalize } from 'path';
-
+import { normalize, join, resolve } from 'path';
+import {TypescriptLanguageServiceHost} from './host';
 export default class TSServer {
     private tsserver = new TSServerProvider;
 
@@ -17,59 +17,60 @@ export default class TSServer {
     }
 }
 
-class ReactIDELanguageServiceHost implements ts.LanguageServiceHost {
-    files: {[name: string]: ts.IScriptSnapshot} = {};
-    getScriptSnapshot(fileName: string): ts.IScriptSnapshot {
-        return this.files[fileName];
-    }
-    getCurrentDirectory() {
-        return __dirname;
-    }
-    getDefaultLibFileName(options: ts.CompilerOptions) {
-        return "lib.d.ts";
-    }
-    getCompilationSettings() {
-        return ts.getDefaultCompilerOptions();
-    }
-    getScriptFileNames() {
-        return Object.keys(this.files);
-    }
-    getScriptVersion() {
-        return "";
-    }
-    addFile(fileName, text) {
-        this.files[fileName] = ts.ScriptSnapshot.fromString(text);
-    }
-}
+var t = new TypescriptLanguageServiceHost();
 
-var s = new ReactIDELanguageServiceHost;
+var t = new TypescriptLanguageServiceHost();
 var r = ts.createDocumentRegistry();
+var s = ts.createLanguageService(t, r);
 
-var service = ts.createLanguageService(s);
-s.addFile('lib.d.ts', readFileSync(normalize('node_modules/typescript/lib/lib.d.ts'), 'utf8'));
-s.addFile('node_modules/@types/node/index.d.ts', readFileSync(normalize('node_modules/@types/node/index.d.ts'), 'utf8'));
+var root = resolve(".");
+
+t.addFile(join(root, "/node_modules/typescript/lib/lib.d.ts"), readFileSync(join(root, '/node_modules/typescript/lib/lib.d.ts'), 'utf8'));
+t.addFile(join(root, "/node_modules/@types/node/index.d.ts"), readFileSync(join(root, '/node_modules/@types/node/index.d.ts'), 'utf8'));
+t.addFile(join(root, "/node_modules/@types/node/inspector.d.ts"), readFileSync(join(root, '/node_modules/@types/node/inspector.d.ts'), 'utf8'));
+t.addFile(join(root, "/node_modules/electron/electron.d.ts"), readFileSync(join(root, '/node_modules/electron/electron.d.ts'), 'utf8'));
+
 
 
 class TSServerProvider implements ReactIDE.CompletionProvider {
     events = new EventEmitter();
     loadFile(filePath) {
-        s.addFile(filePath, readFileSync(filePath, 'utf8'));
+        t.addFile(filePath, readFileSync(filePath, 'utf8'));
         return true;
     }
-    getAtPosition(index: number, token: string, filePath, cb: (list: string[]) => void) {
-        // console.log(arguments);
-        // console.log(index);
-        var {entries} = service.getCompletionsAtPosition(filePath, index, {includeExternalModuleExports: true, includeInsertTextCompletions: true});
-        var list = entries.filter(({name}) => name.slice(0,token.length) == token).map(({name})=>name);
-        console.log(list);
-        cb(list);
+    getAtPosition(position: number, token: string, filePath, cb: (list: string[]) => void) {
+        var {entries} = s.getCompletionsAtPosition(filePath, 0, {includeExternalModuleExports: true, includeInsertTextCompletions: true});
+        
+        var completions = entries.map(({ name }) => name).filter((name) => name.slice(0, token.length) == token)
+        // for(var i = 0; i < completions.length; i++) {
+        //     // console.log(s.getCompletionEntryDetails(filePath, 0, completions[i], null, null));
+        //     console.log(s.getCompletionEntryDetails(filePath, 0, completions[i], null, null));
+        // }
+
+        cb(completions);
     }
     getCompletionDetails(filePath: string, index: number, name: string) {
 
     }
 
+    definition(filePath: string, position: number) {
+        return s.getDefinitionAtPosition(filePath, position);
+    }
+
     updateFile(filePath, source) {
-        s.files[filePath] = ts.ScriptSnapshot.fromString(source);
+        // s.files[filePath] = ts.ScriptSnapshot.fromString(source);
+    }
+    change(filePath: string, text) {
+        t.updateFile(filePath, text);
+        // console.log(to, from, insertString);
+        // t.cmd('change', {
+        //     file: join('/Users/simonhochrein/Documents/Github/reactide', filePath),
+        //     insertString,
+        //     line: from.line + 1,
+        //     offset: from.ch + 1,
+        //     endLine: to.line + 1,
+        //     endOffset: to.ch + 1
+        // });
     }
 }
 
