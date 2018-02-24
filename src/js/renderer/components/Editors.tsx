@@ -5,9 +5,14 @@ import { ReactIDE } from "../../ReactIDE";
 import { readFile, writeFileSync } from "fs";
 import { parse, join, resolve } from "path";
 
+import { remote } from 'electron';
+
 for (var mode of ['javascript', 'xml', 'jsx', 'css', 'markdown']) {
     require('codemirror/mode/' + mode + '/' + mode);
 }
+
+var {TouchBar} = remote;
+
 
 var debounce = function (func, wait, immediate?) {
     var timeout;
@@ -30,6 +35,18 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
     private isSaving;
     private docs: { [filename: string]: Doc } = {};
     private _completionElement: HTMLUListElement;
+    private touchBarCompletions = new TouchBar.TouchBarSegmentedControl({segments: [], change: (i) => {
+        var d = this._codemirror.getDoc();
+        var line = d.getCursor().line;
+        var pos = this._codemirror.getTokenAt(d.getCursor());
+        // console.log({linepos.start});
+        d.replaceRange(this.state.completions[i], {ch: pos.start, line}, {ch: pos.end, line});
+        this.setState({completions: []});
+        this.touchBarCompletions.segments = [];
+    }})
+    mainTouchbar = new TouchBar({items: [
+        this.touchBarCompletions
+    ]});
 
     constructor(props) {
         super(props);
@@ -39,6 +56,7 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             active: -1,
             completionFocus: 0
         }
+        remote.BrowserWindow.getFocusedWindow().setTouchBar(this.mainTouchbar);
     }
 
     render() {
@@ -58,14 +76,14 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             styleActiveLine: true
         } as EditorConfiguration);
         c.setSize("100%", "80%");
-        var complete = debounce(this._complete.bind(this), 500);
+        var complete = debounce(this._complete.bind(this), 100);
         var updateFile = debounce(this._updateFile.bind(this), 500);
 
         // var onChange = debounce(this.props.onChange, 500);
         c.on('change', (e, change) => {
             // console.log(change);
             if(change.origin && change.origin.charAt(0) == '+') {
-                
+
                 ReactIDE.CompletionProviders.get().change(this.state.files[this.state.active], c.getDoc().getValue());
 
                 var rect = this._editorElement.nextElementSibling.getBoundingClientRect();
@@ -80,11 +98,13 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
                     complete(c.getDoc().indexFromPos(cur), token.string);
                 } else {
                     this.setState({completions: []});
+                    this.touchBarCompletions.segments = [];
                 }
             }
         });
         c.on('cursorActivity', () => {
             this.setState({completions: []});
+            this.touchBarCompletions.segments = [];
         });
 
         c.on('scroll', (e) => {
@@ -99,7 +119,9 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
                 {
                     return Pass;
                 } else {
-                    this.setState({ completionFocus: this.state.completionFocus > 0 ? this.state.completionFocus - 1 : 0 })
+                    var newIndex = this.state.completionFocus > 0 ? this.state.completionFocus - 1 : 0;
+                    this.touchBarCompletions.selectedIndex = newIndex;
+                    this.setState({ completionFocus: newIndex });
                 }
             },
             "Down": () => {
@@ -107,7 +129,9 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
                 {
                     return Pass;
                 } else {
-                    this.setState({ completionFocus: this.state.completionFocus < this.state.completions.length - 1 ? this.state.completionFocus + 1 : this.state.completions.length - 1 })
+                    var newIndex = this.state.completionFocus < this.state.completions.length - 1 ? this.state.completionFocus + 1 : this.state.completions.length - 1;
+                    this.touchBarCompletions.selectedIndex = newIndex;
+                    this.setState({ completionFocus:  newIndex});
                 }
             },
             "Enter": () => {
@@ -120,6 +144,7 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
                     // console.log({linepos.start});
                     d.replaceRange(this.state.completions[this.state.completionFocus], {ch: pos.start, line}, {ch: pos.end, line});
                     this.setState({completions: []});
+                    this.touchBarCompletions.segments = [];
                 }
             },
 
@@ -196,6 +221,13 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
 
     private _complete(position: number, token) {
         ReactIDE.CompletionProviders.get().getAtPosition(position, token, this.state.files[this.state.active], (list) => {
+            var items = list.map((val) => {
+                return {
+                    label: val
+                };
+            });
+            this.touchBarCompletions.selectedIndex = 0;
+            this.touchBarCompletions.segments = items;
             this.setState({ completions: list, completionFocus: 0 });
         });
     }
