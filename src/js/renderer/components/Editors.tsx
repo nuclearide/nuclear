@@ -5,7 +5,7 @@ import { ReactIDE } from "../../ReactIDE";
 import { readFile, writeFileSync } from "fs";
 import { parse, join, resolve } from "path";
 
-import { remote } from 'electron';
+import { remote, NativeImage, nativeImage } from 'electron';
 
 for (var mode of ['javascript', 'xml', 'jsx', 'css', 'markdown']) {
     require('codemirror/mode/' + mode + '/' + mode);
@@ -221,14 +221,17 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
 
     private _complete(position: number, token) {
         ReactIDE.CompletionProviders.get().getAtPosition(position, token, this.state.files[this.state.active], (list) => {
-            var items = list.map((val) => {
+            var items = list.map((val): Electron.SegmentedControlSegment => {
+                var n = nativeImage.createFromPath(join(__dirname,'../../../../keyword.png'));
+                console.log(n);
                 return {
-                    label: val
+                    label: val.name,
+                    icon: n
                 };
             });
             this.touchBarCompletions.selectedIndex = 0;
             this.touchBarCompletions.segments = items;
-            this.setState({ completions: list, completionFocus: 0 });
+            this.setState({ completions: list.map(({name})=>name), completionFocus: 0 });
         });
     }
     private _updateFile(filePath, source) {

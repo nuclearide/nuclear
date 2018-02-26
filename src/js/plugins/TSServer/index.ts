@@ -38,10 +38,10 @@ class TSServerProvider implements ReactIDE.CompletionProvider {
         t.addFile(filePath, readFileSync(filePath, 'utf8'));
         return true;
     }
-    getAtPosition(position: number, token: string, filePath, cb: (list: string[]) => void) {
+    getAtPosition(position: number, token: string, filePath, cb: (list: ts.CompletionEntry[]) => void) {
         var {entries} = s.getCompletionsAtPosition(filePath, 0, {includeExternalModuleExports: true, includeInsertTextCompletions: true});
         
-        var completions = entries.map(({ name }) => name).filter((name) => name.slice(0, token.length) == token)
+        var completions = entries.filter(({name}) => name.slice(0, token.length) == token)
         // for(var i = 0; i < completions.length; i++) {
         //     // console.log(s.getCompletionEntryDetails(filePath, 0, completions[i], null, null));
         //     console.log(s.getCompletionEntryDetails(filePath, 0, completions[i], null, null));

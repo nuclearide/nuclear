@@ -1,6 +1,7 @@
 import * as EventEmitter from 'events';
 import { ipcRenderer } from 'electron';
 import * as CodeMirror from 'codemirror';
+import { CompletionEntry } from 'typescript';
 
 const EditorEvents = new EventEmitter();
 const WindowEvents = new EventEmitter();
@@ -77,7 +78,7 @@ export namespace ReactIDE {
     }
     export interface CompletionProvider {
         loadFile(filePath: string): boolean;
-        getAtPosition(cur: number, token: string, file: string, cb: (list: string[]) => void);
+        getAtPosition(cur: number, token: string, file: string, cb: (list: CompletionEntry[]) => void);
         updateFile(filePath: string, source: string);
         change(filePath: string, text: string);
         definition(filePath: string, position: number);
