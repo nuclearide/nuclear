@@ -12,4 +12,8 @@ $ yarn
 $ yarn dev-start
 ```
 
+## Contributing
+
+[Join Our Discord Server](https://discord.gg/gA3eA56)
+
 Project by Simon Hochrein and the Nuclear IDE contributors.
