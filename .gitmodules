@@ -1,0 +1,3 @@
+[submodule "lib/uranium"]
+	path = lib/uranium
+	url = https://github.com/nuclearide/uranium
