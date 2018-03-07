@@ -7,7 +7,6 @@ const EditorEvents = new EventEmitter();
 const WindowEvents = new EventEmitter();
 let _plugins: {[name: string]: ReactIDE.Plugin} = {};
 let _fileTypes: {match: RegExp, type: string}[] = [];
-let _completionProvider: ReactIDE.CompletionProvider;
 
 type EditorEvent = "open" | "close" | "focus" | "save";
 
@@ -71,27 +70,6 @@ export namespace ReactIDE {
                 return fileType.match.test(fileName);
             })
             return (match && match.type) || 'text/plain';
-        }
-    }
-    export interface Completion {
-
-    }
-    export interface CompletionProvider {
-        loadFile(filePath: string): boolean;
-        getAtPosition(cur: number, token: string, file: string, cb: (list: CompletionEntry[]) => void);
-        updateFile(filePath: string, source: string);
-        change(filePath: string, text: string);
-        definition(filePath: string, position: number);
-    }
-    export class CompletionProviders {
-        static add(provider: CompletionProvider) {
-            _completionProvider = provider;
-        }
-        static remove(provider: CompletionProvider) {
-            _completionProvider = null;
-        }
-        static get() {
-            return _completionProvider;
         }
     }
     export class Window {

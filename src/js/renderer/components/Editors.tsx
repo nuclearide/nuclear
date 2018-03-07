@@ -4,6 +4,10 @@ import { EditorConfiguration, fromTextArea, Doc, Position, Pass } from "codemirr
 import { ReactIDE } from "../../ReactIDE";
 import { readFile, writeFileSync } from "fs";
 import { parse, join, resolve } from "path";
+import {Uranium} from '../../../../lib/uranium/dist/index';
+import FSProvider from '../../../../lib/uranium/dist/filesystem/fs.js';
+var u = new Uranium({fileSystem: new FSProvider()});
+u.Plugins.load("typescript");
 
 import { remote, NativeImage, nativeImage } from 'electron';
 
@@ -84,7 +88,7 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             // console.log(change);
             if(change.origin && change.origin.charAt(0) == '+') {
 
-                ReactIDE.CompletionProviders.get().change(this.state.files[this.state.active], c.getDoc().getValue());
+                // ReactIDE.CompletionProviders.get().change(this.state.files[this.state.active], c.getDoc().getValue());
 
                 var rect = this._editorElement.nextElementSibling.getBoundingClientRect();
                 var cur = c.getDoc().getCursor();
@@ -149,16 +153,16 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             },
 
             "Alt-LeftClick": (e, pos) => {
-                var definitions = ReactIDE.CompletionProviders.get().definition(this.state.files[this.state.active], c.getDoc().indexFromPos(pos));
-                if(definitions) {
-                    console.log(definitions);
-                    // c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
-                    if(definitions[0].fileName != this.state.files[this.state.active]) {
-                        ReactIDE.Editor.open(definitions[0].fileName, definitions[0].textSpan.start);
-                    } else {
-                        c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
-                    }
-                }
+                // var definitions = ReactIDE.CompletionProviders.get().definition(this.state.files[this.state.active], c.getDoc().indexFromPos(pos));
+                // if(definitions) {
+                //     console.log(definitions);
+                //     // c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
+                //     if(definitions[0].fileName != this.state.files[this.state.active]) {
+                //         ReactIDE.Editor.open(definitions[0].fileName, definitions[0].textSpan.start);
+                //     } else {
+                //         c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
+                //     }
+                // }
             }
         });
 
@@ -174,7 +178,7 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             files.push(file);
             this.docs[file] = Doc('', ReactIDE.FileTypes.getForFile(parse(file).base));
             c.swapDoc(this.docs[file]);
-            ReactIDE.CompletionProviders.get().loadFile(file);
+            u.Plugins.getCompleters()[0].openFile(file);
             readFile(files[active], 'utf8', (error, file) => {
                 c.setValue(file);
                 c.focus();
@@ -220,21 +224,24 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
     }
 
     private _complete(position: number, token) {
-        ReactIDE.CompletionProviders.get().getAtPosition(position, token, this.state.files[this.state.active], (list) => {
+        u.Plugins.getCompleters()[0].getCompletions(this.state.files[this.state.active], {offset: position}).then((list) => {
+            list = list.filter(({name}) => name.slice(0, token.length) == token);
+            console.log(list);
             var items = list.map((val): Electron.SegmentedControlSegment => {
-                var n = nativeImage.createFromPath(join(__dirname,'../../../../keyword.png'));
-                console.log(n);
+                // var n = nativeImage.createFromPath(join(__dirname,'../../../../keyword.png'));
+                // console.log(n);
                 return {
                     label: val.name,
-                    icon: n
+                    // icon: n
                 };
             });
             this.touchBarCompletions.selectedIndex = 0;
             this.touchBarCompletions.segments = items;
             this.setState({ completions: list.map(({name})=>name), completionFocus: 0 });
         });
+        // ReactIDE.CompletionProviders.get().getAtPosition(position, token, this.state.files[this.state.active], ;
     }
     private _updateFile(filePath, source) {
-        ReactIDE.CompletionProviders.get().updateFile(filePath, source);
+       
     }
 }

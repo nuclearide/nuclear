@@ -8,5 +8,8 @@
     },
     "typeAcquisition": {
         "enable": true
-    }
+    },
+    "exclude": [
+        "lib/**/*"
+    ]
 }
