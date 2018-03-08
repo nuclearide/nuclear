@@ -1,3 +1,9 @@
 [submodule "lib/uranium"]
 	path = lib/uranium
 	url = https://github.com/nuclearide/uranium
+[submodule "lib/radioactive"]
+	path = lib/radioactive
+	url = https://github.com/nuclearide/radioactive
+[submodule "lib/reactor"]
+	path = lib/reactor
+	url = https://github.com/nuclearide/reactor
