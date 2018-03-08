@@ -1,13 +1,18 @@
+/// <reference path="../../../../lib/uranium/index.d.ts" />
 import * as React from "react";
 import 'codemirror/addon/selection/active-line';
 import { EditorConfiguration, fromTextArea, Doc, Position, Pass } from "codemirror";
 import { ReactIDE } from "../../ReactIDE";
 import { readFile, writeFileSync } from "fs";
 import { parse, join, resolve } from "path";
-import {Uranium} from '../../../../lib/uranium/dist/index';
-import FSProvider from '../../../../lib/uranium/dist/filesystem/fs.js';
-var u = new Uranium({fileSystem: new FSProvider()});
+
+import { Uranium as UraniumServer, FileSystemProvider } from "../../../../lib/uranium";
+var {Uranium} = require('../../../../lib/uranium/dist/index');
+var FSProvider = require('../../../../lib/uranium/dist/filesystem/fs').default;
+
+var u: UraniumServer = new Uranium({fileSystem: new FSProvider()});
 u.Plugins.load("typescript");
+u.Plugins.getCompletersForFileType(".ts")[0].openFile(join(__dirname, '../../../../node_modules/@types/node/index.d.ts'));
 
 import { remote, NativeImage, nativeImage } from 'electron';
 
@@ -152,17 +157,23 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
                 }
             },
 
-            "Alt-LeftClick": (e, pos) => {
-                // var definitions = ReactIDE.CompletionProviders.get().definition(this.state.files[this.state.active], c.getDoc().indexFromPos(pos));
-                // if(definitions) {
-                //     console.log(definitions);
-                //     // c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
-                //     if(definitions[0].fileName != this.state.files[this.state.active]) {
-                //         ReactIDE.Editor.open(definitions[0].fileName, definitions[0].textSpan.start);
-                //     } else {
-                //         c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
-                //     }
-                // }
+            "Alt-LeftClick": async (e, pos) => {
+                var fileType = parse(this.state.files[this.state.active]);
+                try {
+                    var definitions = await u.Plugins.getCompletersForFileType(fileType.ext)[0].getDefinitionAt(this.state.files[this.state.active], {offset: c.getDoc().indexFromPos(pos), char: 0, line: 0});
+                    // console.log(definitions);
+                    if(definitions) {
+                        // c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
+                        if(definitions[0].fileName != this.state.files[this.state.active]) {
+                            ReactIDE.Editor.open(definitions[0].fileName, definitions[0].textSpan.start);
+                        } else {
+                            c.getDoc().setCursor(c.getDoc().posFromIndex(definitions[0].textSpan.start));
+                        }
+                    }
+                } catch(e) {
+                    console.log(e);
+                    // Silent Error
+                }
             }
         });
 
@@ -178,7 +189,8 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             files.push(file);
             this.docs[file] = Doc('', ReactIDE.FileTypes.getForFile(parse(file).base));
             c.swapDoc(this.docs[file]);
-            u.Plugins.getCompleters()[0].openFile(file);
+            var fileType = parse(file);
+            u.Plugins.getCompletersForFileType(fileType.ext)[0].openFile(file);
             readFile(files[active], 'utf8', (error, file) => {
                 c.setValue(file);
                 c.focus();
@@ -224,7 +236,8 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
     }
 
     private _complete(position: number, token) {
-        u.Plugins.getCompleters()[0].getCompletions(this.state.files[this.state.active], {offset: position}).then((list) => {
+        var fileType = parse(this.state.files[this.state.active]);
+        u.Plugins.getCompletersForFileType(fileType.ext)[0].getCompletionsAt(this.state.files[this.state.active], {char: 0, line: 0, offset: position}).then((list) => {
             list = list.filter(({name}) => name.slice(0, token.length) == token);
             console.log(list);
             var items = list.map((val): Electron.SegmentedControlSegment => {
@@ -242,6 +255,6 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
         // ReactIDE.CompletionProviders.get().getAtPosition(position, token, this.state.files[this.state.active], ;
     }
     private _updateFile(filePath, source) {
-       
+
     }
 }

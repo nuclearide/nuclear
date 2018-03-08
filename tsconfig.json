@@ -10,6 +10,7 @@
         "enable": true
     },
     "exclude": [
-        "lib/**/*"
+        "lib/**/*",
+        "lib/**/**/*",
     ]
 }
