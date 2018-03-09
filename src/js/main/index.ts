@@ -4,7 +4,8 @@ app.on("ready", () => {
   const window = new BrowserWindow({
     width: 600,
     height: 400,
-    backgroundColor: '#23262F'
+    backgroundColor: '#23262F',
+    titleBarStyle: 'hiddenInset'
   });
   window.loadURL(`file://${__dirname}/../../index.html`);
   window.maximize();

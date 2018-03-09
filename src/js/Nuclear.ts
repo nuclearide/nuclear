@@ -5,12 +5,12 @@ import { CompletionEntry } from 'typescript';
 
 const EditorEvents = new EventEmitter();
 const WindowEvents = new EventEmitter();
-let _plugins: {[name: string]: ReactIDE.Plugin} = {};
+let _plugins: {[name: string]: Nuclear.Plugin} = {};
 let _fileTypes: {match: RegExp, type: string}[] = [];
 
 type EditorEvent = "open" | "close" | "focus" | "save";
 
-export namespace ReactIDE {
+export namespace Nuclear {
     export class Editor {
         static open(filePath: string, pos?: number) {
             EditorEvents.emit('open', filePath, pos);
@@ -50,18 +50,18 @@ export namespace ReactIDE {
         static unload(name: string) {
             _plugins[name].onUnload();
         }
-        static plugins(): {[name: string]: ReactIDE.Plugin} {
+        static plugins(): {[name: string]: Nuclear.Plugin} {
             return _plugins;
         }
     }
     export class FileTypes {
-        static add(match: RegExp, type: string) {
+        static add(match: RegExp, type: any) {
             _fileTypes.push({
                 match,
                 type
             });
         }
-        static remove(match: RegExp, type: string) {
+        static remove(match: RegExp, type: any) {
             let i = _fileTypes.findIndex((fileType) => fileType.match == match && fileType.type == type);
             _fileTypes.splice(i, 1);
         }

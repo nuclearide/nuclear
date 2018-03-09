@@ -1,10 +1,9 @@
 @import "editor";
-
-@background: #23262F;
+@import "../../lib/radioactive/src/index.less";
 
 body {
-    font-family: 'Fira Mono';
-    background-color: @background!important;
+    font-family: 'Open Sans';
+    background-color: @gray-7!important;
 }
 
 html, body, #root, #main-grid {
@@ -12,13 +11,12 @@ html, body, #root, #main-grid {
 }
 
 #main-grid {
-    background-color: @background;
-    color: #969DAE;
+    background-color: @gray-7;
+    color: @gray-1;
 }
 
 .panel {
-    background-color: @background;
-    border: solid 1px #1D2025;
+    background-color: @gray-6;
     display: flex!important;
     flex-direction: column;
 }

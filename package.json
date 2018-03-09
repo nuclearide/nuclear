@@ -8,7 +8,7 @@
   "scripts": {
     "dev-start": "concurrently \"yarn run dev\" \"yarn run start\"",
     "dev": "concurrently \"yarn run dev-less\" \"yarn run dev-ts\"",
-    "dev-less": "watch \"lessc src/less/index.less dist/css/index.css\" src/less",
+    "dev-less": "watch \"lessc src/less/index.less dist/css/index.css\" src/less lib/radioactive/dist",
     "dev-ts": "tsc -w",
     "build": "yarn run build-less && yarn run build-ts",
     "build-less": "lessc src/less/index.less dist/css/index.css",

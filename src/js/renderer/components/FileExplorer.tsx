@@ -1,8 +1,8 @@
 import { List, Icon } from 'semantic-ui-react';
 import * as React from 'react';
 import { readdir, statSync, watch, FSWatcher } from 'fs';
-import { join, resolve } from 'path';
-import { ReactIDE } from '../../ReactIDE';
+import { join, resolve, basename } from 'path';
+import { Nuclear } from '../../Nuclear';
 
 var root = resolve(".");
 
@@ -14,35 +14,36 @@ class Directory extends React.Component<{ path: string }, { files: { name: strin
     }
     render() {
         return (
-            <List>
+            <div className="list">
                 {this.state.files.map((file, key) => {
                     return (
-                        <List.Item key={key}>
-                            <List.Content floated="left" onClick={this.onClick.bind(this, file, key)} className="entry">
-                                {file.type == 'dir' && <Icon name={this.state.open.indexOf(key) > -1 ? 'caret down' : 'caret right'} />}
-                                {file.type == 'file' && <Icon name={'file'} />}
+                        <div key={key}>
+                            <div onClick={this.onClick.bind(this, file, key)} className="entry">
+                                {file.type == 'dir' && <i className={"fa "+(this.state.open.indexOf(key) > -1 ? 'fa-caret-down' : 'fa-caret-right')} />}
+                                {file.type == 'file' && <i className={'fa fa-file'} />}
+                                &nbsp;
                                 {file.name}
-                            </List.Content>
-                            <List.Content style={{ paddingLeft: 10 }}>
+                            </div>
+                            <div style={{ paddingLeft: 10 }}>
                                 {this.state.open.indexOf(key) > -1 && <Directory path={file.path} />}
-                            </List.Content>
-                        </List.Item>
+                            </div>
+                        </div>
                     );
                 })}
                 {
                     this.state.files.length == 0 &&
-                    <List.Item>
+                    <div>
                         No Items
-                    </List.Item>
+                    </div>
                 }
-            </List>
+            </div>
         )
     }
     onClick(file, key) {
         if (file.type === 'dir') {
             this.toggleFolder(key);
         } else {
-            ReactIDE.Editor.open(file.path);
+            Nuclear.Editor.open(file.path);
         }
     }
     toggleFolder(index) {
@@ -91,12 +92,15 @@ export default class FileExplorer extends React.Component<any, any> {
 
     render() {
         return (
-            <Directory path={root} />
+            <div className="list">
+                <i className="fa fa-folder"/> {basename(root)}
+                <Directory path={root} />
+            </div>
         );
     }
     componentDidMount() {
         var onChange = debounce((type, file) => {
-            ReactIDE.Editor.externalChange(type, file);
+            Nuclear.Editor.externalChange(type, file);
         }, 1000);
         this.watch = watch(root, { recursive: true }, onChange);
     }

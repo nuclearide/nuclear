@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Tab, Icon } from "semantic-ui-react";
-import { ReactIDE } from "../../ReactIDE";
+import { Nuclear } from "../../Nuclear";
 import { Editors } from "./Editors";
 import { parse } from "path";
 
@@ -28,8 +28,8 @@ export default class TabBar extends React.Component<any, { files: string[], chan
                         {this.state.files.map((file, key) =>
                             <div key={key} className={"item" + (this.state.active == file ? ' active' : ' inverted')} onClick={() => { this.select(file) }} ref={e => this.files[file] = e}>
                                 {parse(file).base}
-                                <Icon name="asterisk" style={{ display: ~this.state.changed.indexOf(key) ? 'inline-block' : 'none' }} />
-                                <Icon name="close" onClick={this.close.bind(this, file)} />
+                                <i className="fa fa-asterisk" style={{ display: ~this.state.changed.indexOf(key) ? 'inline-block' : 'none' }} />
+                                <i className="fa fa-times" onClick={this.close.bind(this, file)} />
                             </div>
                         )}
                     </div>
@@ -37,16 +37,16 @@ export default class TabBar extends React.Component<any, { files: string[], chan
                         <Editors />
                     </div>
                 </div>
-                <h1 style={{ display: this.state.files.length == 0 ? 'block' : 'none' }}>Welcome to ReactIDE</h1>
+                <h1 style={{ display: this.state.files.length == 0 ? 'block' : 'none', textAlign: 'center' }}>Welcome to Nuclear IDE</h1>
             </div>
         );
     }
     select(file) {
         this.setState({ active: file });
-        ReactIDE.Editor.focus(file);
+        Nuclear.Editor.focus(file);
     }
     componentDidMount() {
-        ReactIDE.Editor.on('open', (filePath) => {
+        Nuclear.Editor.on('open', (filePath) => {
             var files = this.state.files;
             let i;
             if((i = files.indexOf(filePath)) > -1) {
@@ -57,7 +57,7 @@ export default class TabBar extends React.Component<any, { files: string[], chan
                 this.setState({ files, active: files[files.length - 1] });
             }
         });
-        ReactIDE.Editor.on('close', (file) => {
+        Nuclear.Editor.on('close', (file) => {
             if (!file) {
                 this.close(this.state.active);
             }
@@ -68,14 +68,14 @@ export default class TabBar extends React.Component<any, { files: string[], chan
         var { active, files, changed } = this.state;
         var index = files.indexOf(file);
         if (files.length == 0) {
-            ReactIDE.Editor.focus(false);
+            Nuclear.Editor.focus(false);
         } else {
             if (index < files.indexOf(active) || index == 0) {
                 this.select(files[index + 1]);
-                ReactIDE.Editor.close(file);
+                Nuclear.Editor.close(file);
             } else {
                 this.select(files[index - 1]);
-                ReactIDE.Editor.close(file);
+                Nuclear.Editor.close(file);
             }
         }
 
