@@ -99,6 +99,12 @@ app.on("ready", () => {
           click: () => {
             window.reload();
           }
+        },
+        {
+          label: 'Developer Tools',
+          click: () => {
+            window.webContents.openDevTools();
+          }
         }
       ]
     }

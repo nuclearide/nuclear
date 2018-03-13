@@ -1,10 +1,8 @@
 import * as React from "react";
 import Dropdown from "./Dropdown";
-import Select from 'react-select';
 
 export default class Toolbar extends React.Component {
     render() {
-        console.log(Select);
         return (
             <div className="toolbar grid">
                 <div className="column">

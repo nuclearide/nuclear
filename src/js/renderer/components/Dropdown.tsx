@@ -25,14 +25,14 @@ export default class Dropdown extends React.Component<{items: {name}[], onChange
 
     componentDidMount() {
         this.setState({items: this.props.items, selected: !!this.props.selected ? this.props.selected : 0});        
-        document.body.addEventListener("click", (e: MouseEvent) => {
-            var t = e.target as HTMLDivElement;
-            if(t !== this._div && t.parentElement && t.parentElement !== this._div) {
-                setTimeout(() => {
-                    this.setState({open: false});
-                }, 50);
-            }
-        })
+        // document.body.addEventListener("click", (e: MouseEvent) => {
+        //     var t = e.target as HTMLDivElement;
+        //     if(t !== this._div && t.parentElement && t.parentElement !== this._div) {
+        //         setTimeout(() => {
+        //             this.setState({open: false});
+        //         }, 50);
+        //     }
+        // })
     }
 
     select = (key) => {

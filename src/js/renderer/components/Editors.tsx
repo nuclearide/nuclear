@@ -84,7 +84,7 @@ export class Editors extends React.Component<{}, { files: string[], active: numb
             lineNumbers: true,
             styleActiveLine: true
         } as EditorConfiguration);
-        c.setSize("100%", "80%");
+        c.setSize("100%", "90%");
         var complete = debounce(this._complete.bind(this), 100);
         var updateFile = debounce(this._updateFile.bind(this), 500);
 
