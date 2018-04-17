@@ -9,6 +9,8 @@ Clone the repository
 
 ```bash
 $ yarn
+$ yarn run build-main
+# Then, in a separate window
 $ yarn dev-start
 ```
 
