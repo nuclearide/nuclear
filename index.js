@@ -6,7 +6,7 @@ app.on("ready", () => {
     height: 400,
     backgroundColor: '#23262F',
     titleBarStyle: 'hiddenInset',
-    webPreferences: {adfg
+    webPreferences: {
         webSecurity: false
     }
   });
