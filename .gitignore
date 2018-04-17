@@ -1,5 +1,4 @@
 node_modules
 build
-dist/js
-dist/css
-lib
+dist
+.cache

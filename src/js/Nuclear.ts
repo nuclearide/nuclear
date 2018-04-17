@@ -1,7 +1,8 @@
 import * as EventEmitter from 'events';
-import { ipcRenderer } from 'electron';
+// import { ipcRenderer } from 'electron';
 import * as CodeMirror from 'codemirror';
 import { CompletionEntry } from 'typescript';
+import { join } from 'path';
 
 const EditorEvents = new EventEmitter();
 const WindowEvents = new EventEmitter();
@@ -11,6 +12,10 @@ let _fileTypes: {match: RegExp, type: string}[] = [];
 type EditorEvent = "open" | "close" | "focus" | "save";
 
 export namespace Nuclear {
+
+    export function getProjectRoot() {
+        return join(__dirname, '../../../../../../../../');
+    }
     export class Editor {
         static open(filePath: string, pos?: number) {
             EditorEvents.emit('open', filePath, pos);
@@ -27,11 +32,15 @@ export namespace Nuclear {
         static externalChange(type: string, file: string): void {
             EditorEvents.emit('externalChange', type, file);
         }
-        static on(name: EditorEvent, cb: (...data: any[]) => void) {
+        static on(name: string, cb: (...data: any[]) => void) {
             EditorEvents.on(name, cb);
         }
         static once(...args) {
-            EditorEvents.once.apply(this, arguments);
+            EditorEvents.once.apply(EditorEvents, arguments);
+        }
+
+        static emit(...args) {
+            EditorEvents.emit.apply(EditorEvents, arguments);
         }
     }
     export class Plugin {
@@ -79,25 +88,25 @@ export namespace Nuclear {
     }
 }
 
-ipcRenderer.on('open', () => {
-    EditorEvents.emit('open');
-});
+// ipcRenderer.on('open', () => {
+//     EditorEvents.emit('open');
+// });
 
-ipcRenderer.on('save', () => {
-    EditorEvents.emit('save');
-});
+// ipcRenderer.on('save', () => {
+//     EditorEvents.emit('save');
+// });
 
-ipcRenderer.on('close', () => {
-    EditorEvents.emit('close');
-});
+// ipcRenderer.on('close', () => {
+//     EditorEvents.emit('close');
+// });
 
-ipcRenderer.on('goToFile', () => {
-    alert('Go To File');
-});
+// ipcRenderer.on('goToFile', () => {
+//     alert('Go To File');
+// });
 
-ipcRenderer.on('commandPalette', () => {
-    alert("Command Palette");
-});
+// ipcRenderer.on('commandPalette', () => {
+//     alert("Command Palette");
+// });
 
 window.addEventListener('beforeunload', () => {
     WindowEvents.emit('close');

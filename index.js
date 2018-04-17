@@ -1,13 +1,20 @@
-import { app, BrowserWindow, Menu, MenuItem } from "electron";
+var { app, BrowserWindow, Menu, MenuItem } = require("electron");
 
 app.on("ready", () => {
   const window = new BrowserWindow({
     width: 600,
     height: 400,
     backgroundColor: '#23262F',
-    titleBarStyle: 'hiddenInset'
+    titleBarStyle: 'hiddenInset',
+    webPreferences: {adfg
+        webSecurity: false
+    }
   });
-  window.loadURL(`file://${__dirname}/../../index.html`);
+  if(process.env.NODE_ENV === "development") {
+    window.loadURL(`http://localhost:1234`);
+  } else {
+    window.loadURL(`file://${__dirname}/dist/index.html`);
+  }
   window.maximize();
   window.webContents.openDevTools();
 

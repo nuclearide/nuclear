@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Tab, Icon } from "semantic-ui-react";
 import { Nuclear } from "../../Nuclear";
 import { Editors } from "./Editors";
 import { parse } from "path";
+import {Tabs, Icon} from "antd";
+import Editor from "./Editor";
 
-export default class TabBar extends React.Component<any, { files: string[], changed: number[], active: string }> {
-    files: {[file: string]: HTMLDivElement} = {};
+export default class TabBar extends React.Component<any, { files: string[], changed: number[], active: number }> {
+    files: { [file: string]: HTMLDivElement } = {};
 
     constructor(props) {
         super(props);
@@ -16,45 +17,55 @@ export default class TabBar extends React.Component<any, { files: string[], chan
             changed: [
 
             ],
-            active: ''
+            active: 0
         }
     }
 
     render() {
         return (
-            <div className="panel-column">
-                <div style={{ display: this.state.files.length > 0 ? 'block' : 'none' }}>
-                    <div className="ui top attached tabular menu" style={{overflowX: 'auto', overflowY: 'hidden'}}>
-                        {this.state.files.map((file, key) =>
-                            <div key={key} className={"item" + (this.state.active == file ? ' active' : ' inverted')} onClick={() => { this.select(file) }} ref={e => this.files[file] = e}>
-                                {parse(file).base}
-                                <i className="fa fa-asterisk" style={{ display: ~this.state.changed.indexOf(key) ? 'inline-block' : 'none' }} />
-                                <i className="fa fa-times" onClick={this.close.bind(this, file)} />
-                            </div>
-                        )}
-                    </div>
-                    <div className="ui bottom attached active tab segment">
-                        <Editors />
-                    </div>
-                </div>
-                <h1 style={{ display: this.state.files.length == 0 ? 'block' : 'none', textAlign: 'center' }}>Welcome to Nuclear IDE</h1>
-            </div>
+            <Tabs
+                hideAdd
+                onChange={this.select}
+                activeKey={this.state.active.toString()}
+                type="editable-card"
+                onEdit={this.edit}
+                tabBarStyle={{margin: 0}}
+            >
+                {this.state.files.map((file, key) => 
+                    <Tabs.TabPane tab={<span><Icon type="file"/> {file}</span>} key={key.toString()}>
+                        <Editor file={file}/>
+                    </Tabs.TabPane>
+                )}
+            </Tabs>
         );
     }
-    select(file) {
-        this.setState({ active: file });
-        Nuclear.Editor.focus(file);
+    select = (i) => {
+        this.setState({ active: i });
+        // Nuclear.Editor.focus(file);
+    }
+    edit = (i, action) => {
+        console.log(i, action);
+        if(action == "remove") {
+            let {files, active} = this.state;
+            files.splice(i, 1);
+            if(active - 1 > 0) {
+                this.setState({files, active: active - 1});
+            } else {
+                this.setState({files, active: 0});
+            }
+        }
     }
     componentDidMount() {
         Nuclear.Editor.on('open', (filePath) => {
             var files = this.state.files;
             let i;
-            if((i = files.indexOf(filePath)) > -1) {
-                this.setState({active: filePath});
+            if ((i = files.indexOf(filePath)) > -1) {
+                this.setState({ active: filePath });
                 return;
             } else {
                 files.push(filePath);
-                this.setState({ files, active: files[files.length - 1] });
+                this.setState({ files, active: files.length - 1 });
+                return;
             }
         });
         Nuclear.Editor.on('close', (file) => {
@@ -70,7 +81,7 @@ export default class TabBar extends React.Component<any, { files: string[], chan
         if (files.length == 0) {
             Nuclear.Editor.focus(false);
         } else {
-            if (index < files.indexOf(active) || index == 0) {
+            if (index < active|| index == 0) {
                 this.select(files[index + 1]);
                 Nuclear.Editor.close(file);
             } else {
@@ -81,21 +92,5 @@ export default class TabBar extends React.Component<any, { files: string[], chan
 
         files.splice(index, 1);
         this.setState({ files });
-    }
-    onChange(key: number, isDirty: boolean) {
-        if (isDirty) {
-            if (this.state.changed.indexOf(key) == -1) {
-                var changed = this.state.changed;
-                changed.push(key);
-                this.setState({ changed });
-            }
-        } else {
-            var index = this.state.changed.indexOf(key);
-            if (index > -1) {
-                var changed = this.state.changed;
-                changed.splice(index, 1);
-                this.setState({ changed });
-            }
-        }
     }
 }

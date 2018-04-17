@@ -2,7 +2,8 @@ import * as React from 'react';
 import {render} from 'react-dom';
 import App from './components/App';
 import { Nuclear } from '../Nuclear';
-import { readdir } from 'fs';
+
+// import { readdir } from 'fs';
 
 render(<App/>, document.getElementById('root'));
 
@@ -21,9 +22,9 @@ var getPlatform = () => {
 
 document.body.classList.add(getPlatform());
 
-readdir(__dirname+'/../plugins', (err, files) => {
-    files.forEach(file => Nuclear.Plugins.load(file));
-});
+// readdir(__dirname+'/../plugins', (err, files) => {
+//     files.forEach(file => Nuclear.Plugins.load(file));
+// });
 
 addEventListener('beforeunload', () => {
     for(var plugin in Nuclear.Plugins.plugins()) {

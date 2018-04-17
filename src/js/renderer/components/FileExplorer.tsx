@@ -1,76 +1,11 @@
-import { List, Icon } from 'semantic-ui-react';
 import * as React from 'react';
-import { readdir, statSync, watch, FSWatcher } from 'fs';
+import { readdir, readdirSync, statSync, watch, FSWatcher } from 'fs';
+
 import { join, resolve, basename } from 'path';
 import { Nuclear } from '../../Nuclear';
 
-var root = resolve(".");
-
-class Directory extends React.Component<{ path: string }, { files: { name: string, path: string, type: string }[], open: number[] }> {
-
-    constructor(props) {
-        super(props);
-        this.state = { files: [], open: [] };
-    }
-    render() {
-        return (
-            <div className="list">
-                {this.state.files.map((file, key) => {
-                    return (
-                        <div key={key}>
-                            <div onClick={this.onClick.bind(this, file, key)} className="entry">
-                                {file.type == 'dir' && <i className={"fa "+(this.state.open.indexOf(key) > -1 ? 'fa-caret-down' : 'fa-caret-right')} />}
-                                {file.type == 'file' && <i className={'fa fa-file'} />}
-                                &nbsp;
-                                {file.name}
-                            </div>
-                            <div style={{ paddingLeft: 10 }}>
-                                {this.state.open.indexOf(key) > -1 && <Directory path={file.path} />}
-                            </div>
-                        </div>
-                    );
-                })}
-                {
-                    this.state.files.length == 0 &&
-                    <div>
-                        No Items
-                    </div>
-                }
-            </div>
-        )
-    }
-    onClick(file, key) {
-        if (file.type === 'dir') {
-            this.toggleFolder(key);
-        } else {
-            Nuclear.Editor.open(file.path);
-        }
-    }
-    toggleFolder(index) {
-        var open = this.state.open;
-        var i = open.indexOf(index);
-        if (i > -1) {
-            open.splice(i, 1);
-        } else {
-            open.push(index);
-        }
-        console.log(open);
-        this.setState({ open });
-    }
-    componentDidMount() {
-        readdir(this.props.path, (err, files) => {
-            this.setState({
-                files: files.map((file) => {
-                    return {
-                        name: file,
-                        path: join(this.props.path, file),
-                        type: statSync(join(this.props.path, file)).isDirectory() ? 'dir' : 'file'
-                    };
-                })
-            });
-        });
-    }
-}
+import { Tree, Icon } from 'antd';
+const TreeNode = Tree.TreeNode;
 
 var debounce = function (func, wait, immediate?) {
     var timeout;
@@ -88,23 +23,88 @@ var debounce = function (func, wait, immediate?) {
 };
 
 export default class FileExplorer extends React.Component<any, any> {
-    watch: FSWatcher;
+    // watch: FSWatcher;
+    constructor(props) {
+        super(props)
+        this.state = {
+            tree: this.renderItems(Nuclear.getProjectRoot())
+        }
+    }
 
+    async getTree(path) {
+        return new Promise(resolve => {
+            // FileSystem.readdir(path, async (files) => {
+            //     var ret = {};
+            //     for(var file of files) {
+            //         if(file != 'node_modules' && file != '.git' && file != '.cache') {
+            //             await new Promise(resolve2 => {
+            //                 FileSystem.isDir(join(path, file), async (res) => {
+            //                     if(res) {
+            //                         ret[file] = await this.getTree(join(path, file));
+            //                     } else {
+            //                         ret[file] = join(path, file);
+            //                     }
+            //                     resolve2();
+            //                 });
+            //             });
+            //         }
+            //     }
+            //     resolve(ret);
+            // });
+        });
+    }
+    renderItems(path: string) {
+        var files = readdirSync(path);
+        var tree = {};
+        files.forEach(f => {
+            let file = join(path, f);
+            if(statSync(file).isDirectory()) {
+                tree[f] = this.renderItems(file);
+            } else {
+                tree[f] = file;
+            }
+        });
+        return tree;
+    }
+
+    renderTree(tree = this.state.tree) {
+        const iconStyle = {
+            left: "-19px",
+            top: "4px",
+            position: "absolute",
+            background: "white"
+          };
+        return Object.keys(tree).map((file, key) => {
+            if(typeof tree[file] == "object") {
+                return (
+                    <TreeNode title={file} key={file}>
+                        {this.renderTree(tree[file])}
+                    </TreeNode>
+                )
+            } else {
+                return <TreeNode title={file} key={tree[file]}/>
+            }
+        })
+    }
     render() {
         return (
-            <div className="list">
-                <i className="fa fa-folder"/> {basename(root)}
-                <Directory path={root} />
-            </div>
+            <Tree onSelect={(file) => {console.log(file[0]);Nuclear.Editor.open(file[0])}} showLine>
+                <TreeNode title="Project">
+                    {this.renderTree()}
+                </TreeNode>
+            </Tree>
         );
     }
-    componentDidMount() {
+    async componentDidMount() {
+
+        this.setState({tree: await this.getTree(Nuclear.getProjectRoot())});
+
         var onChange = debounce((type, file) => {
             Nuclear.Editor.externalChange(type, file);
         }, 1000);
-        this.watch = watch(root, { recursive: true }, onChange);
+        // this.watch = watch(root, { recursive: true }, onChange);
     }
     componentWillUnmount() {
-        this.watch.close();
+        // this.watch.close();
     }
 }
