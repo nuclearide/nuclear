@@ -12,13 +12,14 @@
     "pkg": "electron-builder",
     "dist": "yarn run build && yarn run pkg",
     "build-main": "parcel watch index.js --target electron",
-    "start": "NODE_ENV=development electron ."
+    "start": "cross-env NODE_ENV=development electron ."
   },
   "dependencies": {
     "@types/antd": "^1.0.0",
     "antd": "^3.3.1",
     "babel-polyfill": "^6.26.0",
     "codemirror": "^5.33.0",
+    "cross-env": "^5.1.4",
     "parcel-bundler": "^1.6.2",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
