@@ -91,12 +91,12 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             theme: "dracula",
             mode: "text/typescript-jsx",
             keyMap: "sublime",
-            gutters: ["CodeMirror-lint-markers"],
-            lint: {
-                async: true,
-                getAnnotations: linter
-            }
+            gutters: ["CodeMirror-lint-markers"]
         });
+        this.c.setOption('lint', {
+            async: true,
+            getAnnotations: linter
+        })
         this.c.setSize('100%', '100%');
 
         if (~imageTypes.indexOf(parse(this.props.file).ext)) {
