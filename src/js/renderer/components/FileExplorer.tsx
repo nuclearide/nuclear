@@ -2,9 +2,10 @@ import * as React from 'react';
 import { readdir, readdirSync, statSync, watch, FSWatcher } from 'fs';
 
 import { join, resolve, basename } from 'path';
-import { Nuclear } from '../../Nuclear';
+import { Nuclear, WindowEvents } from "../../Nuclear";
 
 import { Tree, Icon } from 'antd';
+import * as electron from "electron";
 const TreeNode = Tree.TreeNode;
 
 var debounce = function (func, wait, immediate?) {
@@ -22,11 +23,17 @@ var debounce = function (func, wait, immediate?) {
     };
 };
 
-export default class FileExplorer extends React.Component<any, any> {
+interface FileExplorerProps {
+    toggleLoading: (loading: boolean) => void;
+    loading: boolean;
+}
+
+export default class FileExplorer extends React.Component<FileExplorerProps, any> {
     // watch: FSWatcher;
     constructor(props) {
         super(props)
         this.state = {
+            projectName: 'Project',
             tree: this.renderItems(Nuclear.getProjectRoot())
         }
     }
@@ -89,8 +96,6 @@ export default class FileExplorer extends React.Component<any, any> {
     render() {
         return (
             <Tree
-                onExpand={() => console.log('expand')}
-                onCheck={() => console.log('check')}
                 onSelect={(file) => {
                     if (!file || !file.length) {
                         return;
@@ -100,7 +105,7 @@ export default class FileExplorer extends React.Component<any, any> {
                 }}
                 showLine
             >
-                <TreeNode title="Project" selectable={false}>
+                <TreeNode title={this.state.projectName} selectable={false} disabled={this.props.loading}>
                     {this.renderTree()}
                 </TreeNode>
             </Tree>
@@ -108,14 +113,36 @@ export default class FileExplorer extends React.Component<any, any> {
     }
     async componentDidMount() {
 
-        this.setState({tree: await this.getTree(Nuclear.getProjectRoot())});
-
         var onChange = debounce((type, file) => {
             Nuclear.Editor.externalChange(type, file);
         }, 1000);
         // this.watch = watch(root, { recursive: true }, onChange);
+        WindowEvents.addListener('open', async () => {
+            try {
+                const data: string[] | undefined = await electron.remote.dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory', 'multiSelections'] })
+                console.log('files', data)
+                if (data && !this.props.loading) {
+                    await this.props.toggleLoading(true);
+                    const dir = data[0];
+                    const dirList = dir.split('/');
+                    const lastDirName = dirList[dirList.length - 1];
+                    // this.renderItems() causes browser to hang for a while (sometimes very good while)
+                    // for that case setTimeout allows us to render Loading state and then rerender file tree
+                    // probably needs refactoring :joy:
+                    setTimeout(async () => {
+                        const tree = this.renderItems(dir);
+                        await this.setState({ tree, projectName: lastDirName });
+                        await this.props.toggleLoading(false)
+                    }, 100);
+                }
+            } catch (e) {
+                // no-op
+                console.log('e', e);
+            }
+        })
     }
     componentWillUnmount() {
         // this.watch.close();
+        WindowEvents.on('open', () => {});
     }
 }
