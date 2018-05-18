@@ -1,10 +1,10 @@
 import * as EventEmitter from 'events';
-// import { ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 import * as CodeMirror from 'codemirror';
 import { CompletionEntry } from 'typescript';
 import { join } from 'path';
 
-const EditorEvents = new EventEmitter();
+export const EditorEvents = new EventEmitter();
 const WindowEvents = new EventEmitter();
 let _plugins: {[name: string]: Nuclear.Plugin} = {};
 let _fileTypes: {match: RegExp, type: string}[] = [];
@@ -88,22 +88,24 @@ export namespace Nuclear {
     }
 }
 
-// ipcRenderer.on('open', () => {
-//     EditorEvents.emit('open');
-// });
-
-// ipcRenderer.on('save', () => {
-//     EditorEvents.emit('save');
-// });
-
+ipcRenderer.on('open', () => {
+    console.log('clicked on OPEN')
+    // EditorEvents.emit('open');
+});
+//
+ipcRenderer.on('save', () => {
+    console.log('save')
+    EditorEvents.emit('save');
+});
+//
 // ipcRenderer.on('close', () => {
 //     EditorEvents.emit('close');
 // });
-
+//
 // ipcRenderer.on('goToFile', () => {
 //     alert('Go To File');
 // });
-
+//
 // ipcRenderer.on('commandPalette', () => {
 //     alert("Command Palette");
 // });
