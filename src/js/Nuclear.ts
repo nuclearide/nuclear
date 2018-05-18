@@ -5,7 +5,7 @@ import { CompletionEntry } from 'typescript';
 import { join } from 'path';
 
 export const EditorEvents = new EventEmitter();
-const WindowEvents = new EventEmitter();
+export const WindowEvents = new EventEmitter();
 let _plugins: {[name: string]: Nuclear.Plugin} = {};
 let _fileTypes: {match: RegExp, type: string}[] = [];
 
@@ -90,7 +90,7 @@ export namespace Nuclear {
 
 ipcRenderer.on('open', () => {
     console.log('clicked on OPEN')
-    // EditorEvents.emit('open');
+    WindowEvents.emit('open');
 });
 //
 ipcRenderer.on('save', () => {
