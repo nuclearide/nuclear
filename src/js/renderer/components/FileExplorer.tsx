@@ -73,11 +73,11 @@ export default class FileExplorer extends React.Component<any, any> {
             top: "4px",
             position: "absolute",
             background: "white"
-          };
+        };
         return Object.keys(tree).map((file, key) => {
             if(typeof tree[file] == "object") {
                 return (
-                    <TreeNode title={file} key={file}>
+                    <TreeNode title={file} key={file} selectable={false}>
                         {this.renderTree(tree[file])}
                     </TreeNode>
                 )
@@ -88,8 +88,19 @@ export default class FileExplorer extends React.Component<any, any> {
     }
     render() {
         return (
-            <Tree onSelect={(file) => {console.log(file[0]);Nuclear.Editor.open(file[0])}} showLine>
-                <TreeNode title="Project">
+            <Tree
+                onExpand={() => console.log('expand')}
+                onCheck={() => console.log('check')}
+                onSelect={(file) => {
+                    if (!file || !file.length) {
+                        return;
+                    }
+                    console.log('opening', file)
+                    Nuclear.Editor.open(file[0]);
+                }}
+                showLine
+            >
+                <TreeNode title="Project" selectable={false}>
                     {this.renderTree()}
                 </TreeNode>
             </Tree>

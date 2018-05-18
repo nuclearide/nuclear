@@ -11,12 +11,13 @@ import "codemirror/keymap/sublime";
 var fs = require('fs');
 import { compile, h } from "../lib/LSHost";
 import { Icon, Row, Col } from 'antd';
-import { Nuclear } from "../../Nuclear";
+import { EditorEvents, Nuclear } from "../../Nuclear";
 import { parse } from "path";
 import { spawn } from "child_process";
 import { createInterface } from "readline";
 
 import * as ts from 'typescript';
+import { writeFileSync } from "fs";
 
 var imageTypes = ['.png', '.jpg', '.svg'];
 
@@ -106,6 +107,11 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             sendMessage("open", {file: this.props.file});
             this.setState({ isImage: false, filePath: this.props.file });
         }
+
+        EditorEvents.on('save', () => {
+            console.log('saving');
+            writeFileSync(this.state.filePath, this.c.getValue());
+        })
         // this.setState({loading: true});
         // var res = await FileSystem.readFile(this.props.file);
         // console.log(res, 1);
