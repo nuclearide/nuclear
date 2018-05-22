@@ -5,7 +5,9 @@ import { Nuclear } from "../../Nuclear";
 import * as ts from "typescript";
 import { readFileSync, writeFileSync } from "fs";
 import { delint } from "../../utils/delint";
-import { spawn, ChildProcess } from 'child_process';
+import { spawn } from 'node-pty';
+import { EventEmitter } from 'events';
+import { ITerminal } from 'node-pty/lib/interfaces';
 import { Terminal } from 'xterm';
 
 const electron = require('electron');
@@ -13,8 +15,9 @@ const BrowserWindow = electron.remote.BrowserWindow;
 
 export default class Emulator extends React.Component {
 
+    terminalContainer: HTMLDivElement;
     term: Terminal;
-    c: ChildProcess;
+    c: ITerminal;
 
     state = {
         path: '',
@@ -23,7 +26,7 @@ export default class Emulator extends React.Component {
 
     componentDidMount() {
         this.term = new Terminal();
-        this.term.open(document.getElementById('terminal'));
+        this.term.open(this.terminalContainer);
         this.term.write("Building\n");
 
         Nuclear.Editor.on('focus', (file) => {
@@ -73,9 +76,16 @@ export default class Emulator extends React.Component {
                 </body>
             `);
 
-        this.c = spawn(path.resolve(Nuclear.getProjectRoot(), "node_modules/.bin/parcel"), ["index.html", "--port", "8998"], { cwd: path.join(Nuclear.getProjectRoot(), "preview") });
-        this.c.stdout.on('data', (d) => {
-            this.term.write(d.toString());
+        this.c = spawn(
+            path.resolve(Nuclear.getProjectRoot(), "node_modules/.bin/parcel"),
+            ["index.html", "--port", "8998"],
+            {
+                cwd: path.join(Nuclear.getProjectRoot(), "preview"),
+                cols: this.term.cols,
+                rows: this.term.rows
+            });
+        this.c.on('data', (d) => {
+            this.term.emit("data", d);
             if (d.toString().indexOf("✨") > -1) {
                 this.setState({ loading: false });
                 w.reload();
@@ -99,7 +109,6 @@ export default class Emulator extends React.Component {
     };
 
     render() {
-
         return (
             <div
                 className="panel-column"
@@ -120,7 +129,7 @@ export default class Emulator extends React.Component {
                         </Spin>
                     </Tabs.TabPane>
                     <Tabs.TabPane tab="Console" key="2" forceRender={true}>
-                        <div id="terminal"></div>
+                        <div ref={terminalContainer => this.terminalContainer = terminalContainer}></div>
                     </Tabs.TabPane>
                 </Tabs>
             </div>
@@ -129,6 +138,5 @@ export default class Emulator extends React.Component {
 
     componentWillUnmount() {
         this.c && this.c.kill();
-        this.term && this.term.destroy();
     }
 }

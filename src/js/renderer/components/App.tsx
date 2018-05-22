@@ -3,8 +3,9 @@ import FileExplorer from './FileExplorer';
 import TabBar from './TabBar';
 import Emulator from './Emulator';
 import Toolbar from './Toolbar';
+import Terminal from './Terminal';
 
-import {Layout} from 'antd'
+import { Layout } from 'antd'
 
 export default class App extends React.Component {
 
@@ -21,7 +22,7 @@ export default class App extends React.Component {
             <Layout>
                 {/* <Toolbar/> */}
                 <Layout.Sider style={{ background: '#fff' }} width={400}>
-                    <br/>
+                    <br />
                     {this.state.loading ? <h4 style={{ marginLeft: 10 }}>Loading</h4> : null}
                     {/* <progress id="progress"/> */}
                     <FileExplorer
@@ -30,8 +31,8 @@ export default class App extends React.Component {
                     />
                 </Layout.Sider>
                 <Layout.Content>
-                    <TabBar/>
-                    <Emulator/>
+                    <TabBar />
+                    <Emulator />
                 </Layout.Content>
             </Layout>
         );
