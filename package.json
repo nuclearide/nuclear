@@ -7,15 +7,14 @@
   "license": "MIT",
   "scripts": {
     "dev-start": "concurrently \"yarn run build\" \"yarn start\"",
-    "dev": "parcel src/index.html --target electron",
-    "build": "parcel src/index.html --target electron",
+    "dev": "parcel src/index.html --target electron --public-url .",
+    "build": "parcel src/index.html --target electron --public-url .",
     "pkg": "electron-builder",
     "dist": "yarn run build && yarn run pkg",
     "build-main": "parcel watch index.js --target electron",
     "start": "cross-env NODE_ENV=development electron ."
   },
   "dependencies": {
-    "@types/antd": "^1.0.0",
     "antd": "^3.3.1",
     "babel-polyfill": "^6.26.0",
     "codemirror": "^5.33.0",
@@ -24,8 +23,9 @@
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-select": "^1.2.1",
-    "semantic-ui-css": "^2.2.12",
-    "typescript": "^2.6.2"
+    "src": "^1.1.2",
+    "typescript": "^2.6.2",
+    "xterm": "^3.4.1"
   },
   "devDependencies": {
     "@types/codemirror": "^0.0.55",

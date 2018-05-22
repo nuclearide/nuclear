@@ -1,20 +1,20 @@
-import * as EventEmitter from 'events';
+import EventEmitter from 'events';
 import { ipcRenderer } from 'electron';
-import * as CodeMirror from 'codemirror';
+import CodeMirror from 'codemirror';
 import { CompletionEntry } from 'typescript';
 import { join } from 'path';
 
 export const EditorEvents = new EventEmitter();
 export const WindowEvents = new EventEmitter();
-let _plugins: {[name: string]: Nuclear.Plugin} = {};
-let _fileTypes: {match: RegExp, type: string}[] = [];
+let _plugins: { [name: string]: Nuclear.Plugin } = {};
+let _fileTypes: { match: RegExp, type: string }[] = [];
 
 type EditorEvent = "open" | "close" | "focus" | "save";
 
 export namespace Nuclear {
 
     export function getProjectRoot() {
-        return join(__dirname, '../../../../../../../../');
+        return join(__dirname, '../');
     }
     export class Editor {
         static open(filePath: string, pos?: number) {
@@ -33,7 +33,7 @@ export namespace Nuclear {
             EditorEvents.emit('externalChange', type, file);
         }
         static on(name: string, cb: (...data: any[]) => void) {
-            EditorEvents.on(name, cb);
+            EditorEvents.on.apply(EditorEvents, arguments);
         }
         static once(...args) {
             EditorEvents.once.apply(EditorEvents, arguments);
@@ -53,13 +53,13 @@ export namespace Nuclear {
     }
     export class Plugins {
         static load(name: string) {
-            _plugins[name] = new (require('./plugins/'+name).default)();
+            _plugins[name] = new (require('./plugins/' + name).default)();
             _plugins[name].onLoad();
         }
         static unload(name: string) {
             _plugins[name].onUnload();
         }
-        static plugins(): {[name: string]: Nuclear.Plugin} {
+        static plugins(): { [name: string]: Nuclear.Plugin } {
             return _plugins;
         }
     }

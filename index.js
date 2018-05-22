@@ -1,130 +1,130 @@
 var { app, BrowserWindow, Menu, MenuItem } = require("electron");
 
 app.on("ready", () => {
-  const window = new BrowserWindow({
-    width: 600,
-    height: 400,
-    backgroundColor: '#23262F',
-    titleBarStyle: 'hiddenInset',
-    webPreferences: {
-        webSecurity: false
-    }
-  });
-  if(process.env.NODE_ENV === "development") {
-    window.loadURL(`http://localhost:1234`);
-  } else {
+    const window = new BrowserWindow({
+        width: 600,
+        height: 400,
+        backgroundColor: '#23262F',
+        titleBarStyle: 'hiddenInset',
+        webPreferences: {
+            webSecurity: false
+        }
+    });
+    // if (process.env.NODE_ENV === "development") {
+    //     window.loadURL(`http://localhost:1234`);
+    // } else {
     window.loadURL(`file://${__dirname}/dist/index.html`);
-  }
-  window.maximize();
-  window.webContents.openDevTools();
+    // }
+    window.maximize();
+    window.webContents.openDevTools();
 
-  const menu = Menu.buildFromTemplate([
-    {
-      label: 'ReactIDE',
-      submenu: [
-        {role: 'about'},
-        {type: 'separator'},
-        {role: 'services', submenu: []},
-        {type: 'separator'},
-        {role: 'hide'},
-        {role: 'hideothers'},
-        {role: 'unhide'},
-        {type: 'separator'},
-        {role: 'quit'}
-      ]
-    },
-    {
-      label: 'File',
-      submenu: [
+    const menu = Menu.buildFromTemplate([
         {
-          label: 'Open',
-          accelerator: 'CommandOrControl+O',
-          click: (item, browserWindow) => {
-            browserWindow.webContents.send("open");
-          }
+            label: 'ReactIDE',
+            submenu: [
+                { role: 'about' },
+                { type: 'separator' },
+                { role: 'services', submenu: [] },
+                { type: 'separator' },
+                { role: 'hide' },
+                { role: 'hideothers' },
+                { role: 'unhide' },
+                { type: 'separator' },
+                { role: 'quit' }
+            ]
         },
         {
-          label: 'Save',
-          accelerator: 'CommandOrControl+S',
-          click: (item, browserWindow) => {
-            browserWindow.webContents.send("save");
-          }
+            label: 'File',
+            submenu: [
+                {
+                    label: 'Open',
+                    accelerator: 'CommandOrControl+O',
+                    click: (item, browserWindow) => {
+                        browserWindow.webContents.send("open");
+                    }
+                },
+                {
+                    label: 'Save',
+                    accelerator: 'CommandOrControl+S',
+                    click: (item, browserWindow) => {
+                        browserWindow.webContents.send("save");
+                    }
+                },
+                {
+                    label: 'Close',
+                    accelerator: 'CommandOrControl+W',
+                    click: (item, browserWindow) => {
+                        browserWindow.webContents.send("close");
+                    }
+                }
+            ]
         },
         {
-          label: 'Close',
-          accelerator: 'CommandOrControl+W',
-          click: (item, browserWindow) => {
-            browserWindow.webContents.send("close");
-          }
-        }
-      ]
-    },
-    {
-      label: 'Edit',
-      submenu: [
-        {
-          role: 'cut'
+            label: 'Edit',
+            submenu: [
+                {
+                    role: 'cut'
+                },
+                {
+                    role: 'copy'
+                },
+                {
+                    role: 'paste'
+                }
+            ]
         },
         {
-          role: 'copy'
+            label: 'View',
+            submenu: [
+                {
+                    label: 'Open Command Palette',
+                    accelerator: 'CommandOrControl+Shift+P',
+                    click: () => {
+                        window.webContents.send('commandPalette');
+                    }
+                }
+            ]
         },
         {
-          role: 'paste'
-        }
-      ]
-    },
-    {
-      label: 'View',
-      submenu: [
-        {
-          label: 'Open Command Palette',
-          accelerator: 'CommandOrControl+Shift+P',
-          click: () => {
-            window.webContents.send('commandPalette');
-          }
-        }
-      ]
-    },
-    {
-      label: 'Go',
-      submenu: [
-        {
-          label: 'Go to File',
-          accelerator: 'CommandOrControl+P',
-          click: () => {
-            window.webContents.send('goToFile');
-          }
-        }
-      ]
-    },
-    {
-      label: 'Developer',
-      submenu: [
-        {
-          label: 'Reload',
-          accelerator: 'CommandOrControl+R',
-          click: () => {
-            window.reload();
-          }
+            label: 'Go',
+            submenu: [
+                {
+                    label: 'Go to File',
+                    accelerator: 'CommandOrControl+P',
+                    click: () => {
+                        window.webContents.send('goToFile');
+                    }
+                }
+            ]
         },
         {
-          label: 'Developer Tools',
-          click: () => {
-            window.webContents.openDevTools();
-          }
+            label: 'Developer',
+            submenu: [
+                {
+                    label: 'Reload',
+                    accelerator: 'CommandOrControl+R',
+                    click: () => {
+                        window.reload();
+                    }
+                },
+                {
+                    label: 'Developer Tools',
+                    click: () => {
+                        window.webContents.openDevTools();
+                    }
+                }
+            ]
         }
-      ]
-    }
-  ]);
+    ]);
 
-  Menu.setApplicationMenu(menu);
+    Menu.setApplicationMenu(menu);
 
-  const ctxMenu = new Menu();
-  ctxMenu.append(new MenuItem({ role: "copy" }));
-  ctxMenu.append(new MenuItem({ role: "cut" }));
-  ctxMenu.append(new MenuItem({ role: "paste" }));
-  ctxMenu.append(new MenuItem({ role: "selectall" }));
-  window.webContents.on("context-menu", function (e, params) {
-    ctxMenu.popup(window);
-  });
+    const ctxMenu = new Menu();
+    ctxMenu.append(new MenuItem({ role: "copy" }));
+    ctxMenu.append(new MenuItem({ role: "cut" }));
+    ctxMenu.append(new MenuItem({ role: "paste" }));
+    ctxMenu.append(new MenuItem({ role: "selectall" }));
+    window.webContents.on("context-menu", function (e, params) {
+        ctxMenu.popup(window);
+    });
 });

@@ -1,5 +1,5 @@
-import * as React from "react";
-import * as CodeMirror from "codemirror";
+import React from "react";
+import CodeMirror from "codemirror";
 import "codemirror/mode/javascript/javascript";
 import "codemirror/mode/xml/xml";
 import "codemirror/mode/jsx/jsx";
@@ -28,7 +28,7 @@ i.on('line', (line) => {
     if (line[0] == '{') {
         var obj = JSON.parse(line);
         console.log(obj);
-        if(obj.event == "syntaxDiag") {
+        if (obj.event == "syntaxDiag") {
             var errors = obj.body.diagnostics.map((diagnostic) => {
                 return {
                     from: CodeMirror.Pos(diagnostic.start.line - 1, diagnostic.start.offset - 1),
@@ -41,7 +41,7 @@ i.on('line', (line) => {
     }
 });
 var updateLinting;
-var linter = function(text, u) {
+var linter = function (text, u) {
     updateLinting = u
 }
 
@@ -51,7 +51,7 @@ var sendMessage = (command, args) => {
         "type": "quickinfo",
         "command": command,
         "arguments": args
-    })+'\n');
+    }) + '\n');
 }
 
 window.addEventListener('beforeunload', () => {
@@ -104,7 +104,7 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             this.setState({ isImage: true, filePath: this.props.file });
         } else {
             this.c.setValue(fs.readFileSync(this.props.file, 'utf8'));
-            sendMessage("open", {file: this.props.file});
+            sendMessage("open", { file: this.props.file });
             this.setState({ isImage: false, filePath: this.props.file });
         }
 
@@ -158,7 +158,7 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
                 this.setState({ isImage: true, filePath: props.file });
             } else {
                 this.c.setValue(fs.readFileSync(props.file, 'utf8'));
-                sendMessage("open", {file: this.props.file});
+                sendMessage("open", { file: this.props.file });
                 this.setState({ isImage: false, filePath: props.file });
                 // this.setState({loading: false});
             }

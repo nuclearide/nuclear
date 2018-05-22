@@ -1,8 +1,8 @@
-import * as React from "react";
+import React from "react";
 import { Nuclear } from "../../Nuclear";
 import { Editors } from "./Editors";
 import { parse } from "path";
-import {Tabs, Icon} from "antd";
+import { Tabs, Icon } from "antd";
 import Editor from "./Editor";
 
 export default class TabBar extends React.Component<any, { files: string[], changed: number[], active: number }> {
@@ -29,11 +29,11 @@ export default class TabBar extends React.Component<any, { files: string[], chan
                 activeKey={this.state.active.toString()}
                 type="editable-card"
                 onEdit={this.edit}
-                tabBarStyle={{margin: 0}}
+                tabBarStyle={{ margin: 0 }}
             >
-                {this.state.files.map((file, key) => 
-                    <Tabs.TabPane tab={<span><Icon type="file"/> {file}</span>} key={key.toString()}>
-                        <Editor file={file}/>
+                {this.state.files.map((file, key) =>
+                    <Tabs.TabPane tab={<span><Icon type="file" /> {file}</span>} key={key.toString()}>
+                        <Editor file={file} />
                     </Tabs.TabPane>
                 )}
             </Tabs>
@@ -41,17 +41,17 @@ export default class TabBar extends React.Component<any, { files: string[], chan
     }
     select = (i) => {
         this.setState({ active: i });
-        // Nuclear.Editor.focus(file);
+        Nuclear.Editor.focus(this.state.files[i]);
     }
     edit = (i, action) => {
         console.log(i, action);
-        if(action == "remove") {
-            let {files, active} = this.state;
+        if (action == "remove") {
+            let { files, active } = this.state;
             files.splice(i, 1);
-            if(active - 1 > 0) {
-                this.setState({files, active: active - 1});
+            if (active - 1 > 0) {
+                this.setState({ files, active: active - 1 });
             } else {
-                this.setState({files, active: 0});
+                this.setState({ files, active: 0 });
             }
         }
     }
@@ -81,7 +81,7 @@ export default class TabBar extends React.Component<any, { files: string[], chan
         if (files.length == 0) {
             Nuclear.Editor.focus(false);
         } else {
-            if (index < active|| index == 0) {
+            if (index < active || index == 0) {
                 this.select(files[index + 1]);
                 Nuclear.Editor.close(file);
             } else {

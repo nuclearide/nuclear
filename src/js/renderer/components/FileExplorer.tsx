@@ -34,7 +34,7 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
         super(props)
         this.state = {
             projectName: 'Project',
-            tree: this.renderItems(Nuclear.getProjectRoot())
+            tree: {}
         }
     }
 
@@ -60,18 +60,21 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
             // });
         });
     }
-    renderItems(path: string) {
-        var files = readdirSync(path);
-        var tree = {};
-        files.forEach(f => {
-            let file = join(path, f);
-            if(statSync(file).isDirectory()) {
-                tree[f] = this.renderItems(file);
-            } else {
-                tree[f] = file;
-            }
+    async renderItems(path: string) {
+        return new Promise(async (resolve) => {
+            readdir(path, async (err, files) => {
+                var tree = {};
+                for (var f of files) {
+                    let file = join(path, f);
+                    if (statSync(file).isDirectory()) {
+                        tree[f] = await this.renderItems(file);
+                    } else {
+                        tree[f] = file;
+                    }
+                };
+                resolve(tree);
+            });
         });
-        return tree;
     }
 
     renderTree(tree = this.state.tree) {
@@ -82,14 +85,14 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
             background: "white"
         };
         return Object.keys(tree).map((file, key) => {
-            if(typeof tree[file] == "object") {
+            if (typeof tree[file] == "object") {
                 return (
                     <TreeNode title={file} key={file} selectable={false}>
                         {this.renderTree(tree[file])}
                     </TreeNode>
                 )
             } else {
-                return <TreeNode title={file} key={tree[file]}/>
+                return <TreeNode title={file} key={tree[file]} />
             }
         })
     }
@@ -112,6 +115,11 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
         );
     }
     async componentDidMount() {
+        await this.props.toggleLoading(true)
+        this.renderItems(Nuclear.getProjectRoot()).then(async (tree) => {
+            await this.setState({ tree, projectName: "Nuclear" });
+            await this.props.toggleLoading(false)
+        });
 
         var onChange = debounce((type, file) => {
             Nuclear.Editor.externalChange(type, file);
@@ -130,7 +138,7 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
                     // for that case setTimeout allows us to render Loading state and then rerender file tree
                     // probably needs refactoring :joy:
                     setTimeout(async () => {
-                        const tree = this.renderItems(dir);
+                        const tree = await this.renderItems(dir);
                         await this.setState({ tree, projectName: lastDirName });
                         await this.props.toggleLoading(false)
                     }, 100);
@@ -143,6 +151,6 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
     }
     componentWillUnmount() {
         // this.watch.close();
-        WindowEvents.on('open', () => {});
+        WindowEvents.on('open', () => { });
     }
 }
