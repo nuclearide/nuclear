@@ -72,7 +72,7 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
     }
     render() {
         return (
-            <div style={{ height: "calc(100% - 40px)" }}>
+            <div style={{ height: "calc(50% - 40px)" }}>
                 <div style={{ display: this.state.isImage ? "none" : "block", height: '100%', width: '100%' }} ref={codemirrorDiv => this.codemirrorDiv = codemirrorDiv}>
                 </div>
                 <div style={{ display: !this.state.isImage ? "none" : "block", height: '100%', width: '100%' }}>
