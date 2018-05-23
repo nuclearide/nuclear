@@ -18,11 +18,21 @@ export default class Emulator extends React.Component {
     terminalContainer: HTMLDivElement;
     term: Terminal;
     c: ITerminal;
+    w: Element;
 
     state = {
         path: '',
         loading: false
     }
+    toggleWebViewDevTools = () => {
+        if (!this.w) {
+            return;
+        }
+        if (this.w.isDevToolsOpened()) {
+            return this.w.closeDevTools();
+        }
+        return this.w.openDevTools();
+    };
 
     componentDidMount() {
         this.term = new Terminal();
@@ -53,14 +63,6 @@ export default class Emulator extends React.Component {
         // this.renderFileComponent(file[0]);
         // const bundle = await this.loadFileWithParcel(file[0]);
         await this.setState({ path: file });
-        const delinted = await this.delintViaTs(file);
-        console.log('delinted', delinted)
-        if (delinted.classNames.length) {
-            console.log('will use classnames', delinted.classNames);
-        }
-        const classN = delinted.classNames[0]
-        // Instead of rendered there should be <${classN} /> (with props probably)
-        // But it anyway doesnt render because of es6 imports failed, needs to be solved
         const template = `
             var React = require('react');
             var ImportedComponent = require('../${path.relative(Nuclear.getProjectRoot(), file)}');
@@ -95,9 +97,9 @@ export default class Emulator extends React.Component {
         });
         // loads new window with preview.html, which contains our template with code
         // its good for first time, probably we do not even need webview
-        const w = document.querySelector('#previews');
+        this.w = document.querySelector('#previews');
         // w.getWebContents().openDevTools();
-        w.src = 'http://localhost:8998';
+        this.w.src = 'http://localhost:8998';
     }
 
     delintViaTs = (path) => {
@@ -120,10 +122,9 @@ export default class Emulator extends React.Component {
                 <Tabs tabBarStyle={{ height: "50px" }}>
                     <Tabs.TabPane tab="Preview" key="1" forceRender={true}>
                         <Spin spinning={this.state.loading} indicator={<Icon type="loading" style={{ fontSize: 36 }} spin />}>
-                            <Row>
-                                <Col>
-                                    <Icon onClick={this.reloadContainer} type="reload" />
-                                </Col>
+                            <Row justify={'end'} type={'flex'} style={{ paddingLeft: 15, paddingRight: 15, marginBottom: 5 }}>
+                                <Icon title={'Reload component container'} style={{ width: 50 }} onClick={this.reloadContainer} type="reload" />
+                                { this.w && <Icon title={'Toggle container devtools'} style={{ width: 50 }} onClick={this.toggleWebViewDevTools} type="select" /> }
                             </Row>
                             <webview id={'previews'} style={{ height: '100%' }}></webview>
                         </Spin>
