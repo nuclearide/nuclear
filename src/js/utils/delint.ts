@@ -1,18 +1,31 @@
 import {readFileSync} from "fs";
 import * as ts from "typescript";
+import _ from "lodash";
 
 export function delint(sourceFile: ts.SourceFile) {
     const result = {
-        classNames: [],
-    }
+        defaultExport: "",
+        classNames: []
+    };
     delintNode(sourceFile);
 
     function delintNode(node: ts.Node) {
         switch (node.kind) {
+            case ts.SyntaxKind.DefaultKeyword:
+                const defaultClassName = _.at(node.parent, 'name.escapedText')[0];
+                console.log('default keyword', node);
+                if (defaultClassName) {
+                    console.log('default class declaration', defaultClassName)
+                    result.defaultExport = defaultClassName;
+                }
+                break;
             case ts.SyntaxKind.ClassDeclaration:
-                console.log('class declaration', node.name.escapedText);
-                result.classNames.push(node.name.escapedText);
-                report(node, 'class declaration found');
+                const className = _.at(node.name, 'escapedText')[0];
+                if (className) {
+                    console.log("class declaration", className);
+                    result.classNames.push(className);
+                    report(node, "class declaration found");
+                };
         }
 
         ts.forEachChild(node, delintNode);
