@@ -18,11 +18,13 @@ export default class Emulator extends React.Component {
     terminalContainer: HTMLDivElement;
     term: Terminal;
     c: ITerminal;
-    w: Element;
+    w: Electron.webContents;
 
     state = {
         path: '',
-        loading: false
+        loading: false,
+        availableClasses: [],
+        noDefaultClass: false,
     }
     toggleWebViewDevTools = () => {
         if (!this.w) {
@@ -45,6 +47,9 @@ export default class Emulator extends React.Component {
         Nuclear.Editor.on('open', (file) => {
             this.openPreview(file);
         });
+        Nuclear.Editor.on('save', (file) => {
+            this.loadFile(file);
+        });
     }
     openPreview(file) {
         var exts = [".tsx", ".js", ".jsx"];
@@ -58,11 +63,33 @@ export default class Emulator extends React.Component {
         webview.reload();
     }
 
+    async lintFile(file = this.state.path) {
+        if (!file) {
+            console.log('no valid file passed');
+            return;
+        }
+        const delinted = await this.delintViaTs(file);
+        let availableClasses = [];
+        // Used for detecting if no default class present
+        // If yes, try to render first class of classnames
+        // if even that doesn't help - prompt to user.
+        let noDefaultClass = false;
+        if (delinted.defaultExport) {
+            availableClasses = [delinted.defaultExport + '.default']
+                .concat(delinted.classNames.filter(c => c !== delinted.defaultExport));
+        } else {
+            availableClasses = delinted.classNames.filter(c => c.length);
+            noDefaultClass = true;
+        }
+        await this.setState({ availableClasses, noDefaultClass });
+    }
+
     async loadFile(file) {
         console.log('file', file)
         // this.renderFileComponent(file[0]);
         // const bundle = await this.loadFileWithParcel(file[0]);
         await this.setState({ path: file });
+        await this.lintFile(file);
         const template = `
             var React = require('react');
             var ImportedComponent = require('../${path.relative(Nuclear.getProjectRoot(), file)}');
