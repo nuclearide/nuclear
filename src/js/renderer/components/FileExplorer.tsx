@@ -107,8 +107,9 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
                     Nuclear.Editor.open(file[0]);
                 }}
                 showLine
+                defaultExpandedKeys={['main']}
             >
-                <TreeNode title={this.state.projectName} selectable={false} disabled={this.props.loading}>
+                <TreeNode key={'main'} title={this.state.projectName} selectable={false} disabled={this.props.loading}>
                     {this.renderTree()}
                 </TreeNode>
             </Tree>
