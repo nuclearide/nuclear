@@ -90,7 +90,7 @@ export default class Emulator extends React.Component {
             this.term.emit("data", d);
             if (d.toString().indexOf("✨") > -1) {
                 this.setState({ loading: false });
-                w.reload();
+                this.w.reload();
             } else if (d.toString().indexOf("⏳") > -1) {
                 this.setState({ loading: true });
             }
