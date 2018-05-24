@@ -6,6 +6,7 @@ import { Nuclear, WindowEvents } from "../../Nuclear";
 
 import { Tree, Icon } from 'antd';
 import * as electron from "electron";
+import { LOCALSTORAGE_PROJECT_PATH } from "../../utils/constants";
 const TreeNode = Tree.TreeNode;
 
 var debounce = function (func, wait, immediate?) {
@@ -38,28 +39,6 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
         }
     }
 
-    async getTree(path) {
-        return new Promise(resolve => {
-            // FileSystem.readdir(path, async (files) => {
-            //     var ret = {};
-            //     for(var file of files) {
-            //         if(file != 'node_modules' && file != '.git' && file != '.cache') {
-            //             await new Promise(resolve2 => {
-            //                 FileSystem.isDir(join(path, file), async (res) => {
-            //                     if(res) {
-            //                         ret[file] = await this.getTree(join(path, file));
-            //                     } else {
-            //                         ret[file] = join(path, file);
-            //                     }
-            //                     resolve2();
-            //                 });
-            //             });
-            //         }
-            //     }
-            //     resolve(ret);
-            // });
-        });
-    }
     async renderItems(path: string) {
         return new Promise(async (resolve) => {
             readdir(path, async (err, files) => {
@@ -115,12 +94,26 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
             </Tree>
         );
     }
+
+    async changeFileTree(dir: string) {
+        if (dir && !this.props.loading) {
+            await this.props.toggleLoading(true);
+            const dirList = dir.split('/');
+            const lastDirName = dirList[dirList.length - 1];
+            // this.renderItems() causes browser to hang for a while (sometimes very good while)
+            // for that case setTimeout allows us to render Loading state and then rerender file tree
+            // probably needs refactoring :joy:
+            setTimeout(async () => {
+                const tree = await this.renderItems(dir);
+                await this.setState({ tree, projectName: lastDirName });
+                await this.props.toggleLoading(false)
+                await localStorage.setItem(LOCALSTORAGE_PROJECT_PATH, dir);
+            }, 100);
+        }
+    }
+
+
     async componentDidMount() {
-        await this.props.toggleLoading(true)
-        this.renderItems(Nuclear.getProjectRoot()).then(async (tree) => {
-            await this.setState({ tree, projectName: "Nuclear" });
-            await this.props.toggleLoading(false)
-        });
 
         var onChange = debounce((type, file) => {
             Nuclear.Editor.externalChange(type, file);
@@ -130,25 +123,17 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
             try {
                 const data: string[] | undefined = await electron.remote.dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory', 'multiSelections'] })
                 console.log('files', data)
-                if (data && !this.props.loading) {
-                    await this.props.toggleLoading(true);
-                    const dir = data[0];
-                    const dirList = dir.split('/');
-                    const lastDirName = dirList[dirList.length - 1];
-                    // this.renderItems() causes browser to hang for a while (sometimes very good while)
-                    // for that case setTimeout allows us to render Loading state and then rerender file tree
-                    // probably needs refactoring :joy:
-                    setTimeout(async () => {
-                        const tree = await this.renderItems(dir);
-                        await this.setState({ tree, projectName: lastDirName });
-                        await this.props.toggleLoading(false)
-                    }, 100);
-                }
+                await this.changeFileTree(data[0])
             } catch (e) {
                 // no-op
                 console.log('e', e);
             }
         })
+        const openedProject = localStorage.getItem(LOCALSTORAGE_PROJECT_PATH);
+        if (openedProject) {
+            console.log('loading from localstorage', openedProject);
+            await this.changeFileTree(openedProject)
+        }
     }
     componentWillUnmount() {
         // this.watch.close();
