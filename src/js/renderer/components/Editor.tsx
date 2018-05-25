@@ -15,66 +15,47 @@ import { EditorEvents, Nuclear } from "../../Nuclear";
 import { parse } from "path";
 import { spawn } from "child_process";
 import { createInterface } from "readline";
+import TSClient from '../../../../lib/tsclient';
 
 import * as ts from 'typescript';
 import { writeFileSync } from "fs";
+import { debounce } from "lodash";
+import {createPortal} from 'react-dom';
 
 var imageTypes = ['.png', '.jpg', '.svg'];
 
 var tsserver = spawn('./node_modules/.bin/tsserver');
 var i = createInterface(tsserver.stdout);
 
-i.on('line', (line) => {
-    if (line[0] == '{') {
-        var obj = JSON.parse(line);
-        console.log(obj);
-        if (obj.event == "syntaxDiag") {
-            var errors = obj.body.diagnostics.map((diagnostic) => {
-                return {
-                    from: CodeMirror.Pos(diagnostic.start.line - 1, diagnostic.start.offset - 1),
-                    to: CodeMirror.Pos(diagnostic.end.line - 1, diagnostic.end.offset - 1),
-                    message: diagnostic.text
-                }
-            })
-            updateLinting(errors);
-        }
-    }
-});
-var updateLinting;
-var linter = function (text, u) {
-    updateLinting = u
+function Autocomplete(props) {
+    return createPortal(
+        <div style={{ height: '100px', position: "absolute", zIndex: 5000, background: "gray", width: '200px', overflow: "scroll", left: props.left+"px", top: props.top+"px" }}>
+            {props.completions.map(({ name }) => {
+                return <div>{name}</div>
+            })}
+        </div>,
+        document.body
+    )
 }
-
-var sendMessage = (command, args) => {
-    tsserver.stdin.write(JSON.stringify({
-        "seq": 1,
-        "type": "quickinfo",
-        "command": command,
-        "arguments": args
-    }) + '\n');
-}
-
-window.addEventListener('beforeunload', () => {
-    console.log("killing");
-    tsserver.kill();
-})
-
-export default class Editor extends React.Component<{ file: string }, { isImage: boolean, filePath: string, errors: any[] }> {
+export default class Editor extends React.Component<{ file: string }, { isImage: boolean, filePath: string, errors: any[], completions: any[], pos: number[] }> {
     private codemirrorDiv: HTMLElement;
     private c: CodeMirror.Editor;
+    private completionDiv: HTMLDivElement;
     constructor(props) {
         super(props);
         this.state = {
             isImage: false,
             filePath: '',
-            errors: []
+            errors: [],
+            completions: [],
+            pos: []
         }
     }
     render() {
         return (
             <div style={{ height: "calc(50% - 40px)" }}>
-                <div style={{ display: this.state.isImage ? "none" : "block", height: '100%', width: '100%' }} ref={codemirrorDiv => this.codemirrorDiv = codemirrorDiv}>
-                </div>
+                <Autocomplete completions={this.state.completions} left={this.state.pos[0]} top={this.state.pos[1]}/>
+                <div style={{ display: this.state.isImage ? "none" : "block", height: 'calc(100% - 100px)', width: '100%' }} ref={codemirrorDiv => this.codemirrorDiv = codemirrorDiv} />
                 <div style={{ display: !this.state.isImage ? "none" : "block", height: '100%', width: '100%' }}>
                     <Row type="flex" justify="center" align="middle" style={{ height: '100%' }}>
                         <Col span={6}>
@@ -87,6 +68,9 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
     }
 
     async componentDidMount() {
+        var tsclient = new TSClient({
+            cwd: Nuclear.getProjectRoot()
+        })
         this.c = CodeMirror(this.codemirrorDiv, {
             lineNumbers: true,
             theme: "dracula",
@@ -94,17 +78,72 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             keyMap: "sublime",
             gutters: ["CodeMirror-lint-markers"]
         });
-        this.c.setOption('lint', {
-            async: true,
-            getAnnotations: linter
+        this.c.setOption('lint', { lintOnChange: false });
+        CodeMirror.registerHelper("lint", "javascript", () => {
+            return syntaxErrors.concat(semanticErrors);
         })
+
         this.c.setSize('100%', '100%');
+        tsclient.open(this.props.file);
+        var syntaxErrors = [];
+        var semanticErrors = [];
+        tsclient.on('syntaxDiag', (errs) => {
+            var errors = errs.diagnostics.map((diagnostic) => {
+                return {
+                    from: CodeMirror.Pos(diagnostic.start.line - 1, diagnostic.start.offset - 1),
+                    to: CodeMirror.Pos(diagnostic.end.line - 1, diagnostic.end.offset - 1),
+                    message: diagnostic.text
+                }
+            });
+            syntaxErrors = errors;
+            this.c["performLint"]();
+        });
+        tsclient.on("semanticDiag", (errs) => {
+            var errors = errs.diagnostics.map((diagnostic) => {
+                return {
+                    from: CodeMirror.Pos(diagnostic.start.line - 1, diagnostic.start.offset - 1),
+                    to: CodeMirror.Pos(diagnostic.end.line - 1, diagnostic.end.offset - 1),
+                    message: diagnostic.text,
+                    type: "semantic"
+                }
+            })
+            semanticErrors = errors;
+            this.c["performLint"]();
+        });
+
+        var getCompletions = debounce(async (line, offset, prefix) => {
+            // console.log(prefix);
+            var res = await tsclient.getCompletions(this.props.file, line + 1, offset + 1, prefix == "." ? undefined : prefix);
+            var results = res.body;
+            var { left, top } = this.c.cursorCoords(true);
+            // console.log(await tsclient.getDefinition(this.props.file, 6, 22));
+            // console.log(results);
+            this.setState({ completions: results, pos: [left, top] });
+        }, 500);
+        var getErr = debounce(() => {
+            tsclient.getErr(this.props.file);
+        }, 200);
+
+        var onUpdate = (line, ch, str) => {
+            getErr();
+            getCompletions(line, ch, str);
+        }
+        this.c.on('change', async (e, change) => {
+            if (change.origin == "setValue") { return; }
+
+            tsclient.change(this.props.file, change.from.line + 1, change.from.ch + 1, change.to.line + 1, change.to.ch + 1, change.text.join("\n"));
+            var str = this.c.getTokenAt(CodeMirror.Pos(change.to.line, change.to.ch + 1)).string;
+            onUpdate(change.to.line, change.to.ch, str);
+        })
+        // setInterval(async () => {
+        // console.clear();
+        // }, 5000);
 
         if (~imageTypes.indexOf(parse(this.props.file).ext)) {
             this.setState({ isImage: true, filePath: this.props.file });
         } else {
             this.c.setValue(fs.readFileSync(this.props.file, 'utf8'));
-            sendMessage("open", { file: this.props.file });
+            // sendMessage("open", { file: this.props.file });
             this.setState({ isImage: false, filePath: this.props.file });
         }
 
@@ -158,7 +197,7 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
                 this.setState({ isImage: true, filePath: props.file });
             } else {
                 this.c.setValue(fs.readFileSync(props.file, 'utf8'));
-                sendMessage("open", { file: this.props.file });
+                // sendMessage("open", { file: this.props.file });
                 this.setState({ isImage: false, filePath: props.file });
                 // this.setState({loading: false});
             }

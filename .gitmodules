@@ -7,3 +7,6 @@
 [submodule "lib/reactor"]
 	path = lib/reactor
 	url = https://github.com/nuclearide/reactor
+[submodule "lib/tsclient"]
+	path = lib/tsclient
+	url = https://github.com/nuclearide/tsclient

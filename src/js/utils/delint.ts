@@ -1,4 +1,4 @@
-import {readFileSync} from "fs";
+import { readFileSync } from "fs";
 import * as ts from "typescript";
 import _ from "lodash";
 
