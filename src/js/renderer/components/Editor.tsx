@@ -20,7 +20,7 @@ import TSClient from '../../../../lib/tsclient';
 import * as ts from 'typescript';
 import { writeFileSync } from "fs";
 import { debounce } from "lodash";
-import {createPortal} from 'react-dom';
+import { createPortal } from 'react-dom';
 
 var imageTypes = ['.png', '.jpg', '.svg'];
 
@@ -29,9 +29,9 @@ var i = createInterface(tsserver.stdout);
 
 function Autocomplete(props) {
     return createPortal(
-        <div style={{ height: '100px', position: "absolute", zIndex: 5000, background: "gray", width: '200px', overflow: "scroll", left: props.left+"px", top: props.top+"px" }}>
-            {props.completions.map(({ name }) => {
-                return <div>{name}</div>
+        <div style={{ height: '100px', position: "absolute", zIndex: 5000, background: "gray", width: '200px', overflow: "scroll", left: props.left + "px", top: props.top + "px" }}>
+            {props.completions.map(({ name }, key) => {
+                return <div key={key}>{name}</div>
             })}
         </div>,
         document.body
@@ -54,7 +54,7 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
     render() {
         return (
             <div style={{ height: "calc(50% - 40px)" }}>
-                <Autocomplete completions={this.state.completions} left={this.state.pos[0]} top={this.state.pos[1]}/>
+                {this.state.completions.length > 0 && <Autocomplete completions={this.state.completions} left={this.state.pos[0]} top={this.state.pos[1]} />}
                 <div style={{ display: this.state.isImage ? "none" : "block", height: 'calc(100% - 100px)', width: '100%' }} ref={codemirrorDiv => this.codemirrorDiv = codemirrorDiv} />
                 <div style={{ display: !this.state.isImage ? "none" : "block", height: '100%', width: '100%' }}>
                     <Row type="flex" justify="center" align="middle" style={{ height: '100%' }}>
@@ -111,33 +111,43 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             this.c["performLint"]();
         });
 
-        var getCompletions = debounce(async (line, offset, prefix) => {
+        var getCompletions = debounce(async (line, offset) => {
+            let prefix = this.c.getTokenAt(CodeMirror.Pos(line, offset + 1)).string;
             // console.log(prefix);
-            var res = await tsclient.getCompletions(this.props.file, line + 1, offset + 1, prefix == "." ? undefined : prefix);
+            var res = await tsclient.getCompletions(this.props.file, line + 1, offset + 1, prefix && prefix == "." ? undefined : prefix);
             var results = res.body;
-            var { left, top } = this.c.cursorCoords(true);
             // console.log(await tsclient.getDefinition(this.props.file, 6, 22));
             // console.log(results);
-            this.setState({ completions: results, pos: [left, top] });
-        }, 500);
+            this.setState({ completions: results });
+        }, 200);
         var getErr = debounce(() => {
             tsclient.getErr(this.props.file);
         }, 200);
-
-        var onUpdate = (line, ch, str) => {
-            getErr();
-            getCompletions(line, ch, str);
-        }
         this.c.on('change', async (e, change) => {
             if (change.origin == "setValue") { return; }
-
+            if (change.origin == "+delete" || /^[a-z]$/i.test(change.text[0])) {
+                var { line, ch } = this.c.getDoc().getCursor();
+                var { left, top } = this.c.cursorCoords(false);
+                this.setState({ pos: [left, top + 20] }, () => getCompletions(line, ch));
+            }
             tsclient.change(this.props.file, change.from.line + 1, change.from.ch + 1, change.to.line + 1, change.to.ch + 1, change.text.join("\n"));
-            var str = this.c.getTokenAt(CodeMirror.Pos(change.to.line, change.to.ch + 1)).string;
-            onUpdate(change.to.line, change.to.ch, str);
+            getErr();
         })
-        // setInterval(async () => {
-        // console.clear();
-        // }, 5000);
+
+        this.c.on('mousedown', () => {
+            this.setState({ completions: [] });
+        });
+
+        this.c.on('keydown', (cm, e) => {
+            if (e.ctrlKey && e.keyCode == 32) {
+                var { line, ch } = this.c.getDoc().getCursor();
+                var { left, top } = this.c.cursorCoords(false);
+                this.setState({ pos: [left, top + 20] }, () => getCompletions(line, ch));
+            }
+            //     if (~[37, 38, 39, 40].indexOf(e.keyCode)) {
+            //         this.setState({ completions: [] });
+            //     }
+        })
 
         if (~imageTypes.indexOf(parse(this.props.file).ext)) {
             this.setState({ isImage: true, filePath: this.props.file });
