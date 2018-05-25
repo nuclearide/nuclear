@@ -6,7 +6,7 @@ import { Nuclear, WindowEvents } from "../../Nuclear";
 
 import { Tree, Icon } from 'antd';
 import * as electron from "electron";
-import { LOCALSTORAGE_PROJECT_PATH } from "../../utils/constants";
+import { LOCALSTORAGE_PROJECT_PATH, USED_HOTKEYS } from "../../utils/constants";
 const TreeNode = Tree.TreeNode;
 
 var debounce = function (func, wait, immediate?) {
@@ -25,8 +25,10 @@ var debounce = function (func, wait, immediate?) {
 };
 
 interface FileExplorerProps {
-    toggleLoading: (loading: boolean) => void;
+    toggleState: (newState: object) => void;
     loading: boolean;
+    toggleFileSearch: (e: KeyboardEvent) => void;
+    path: string;
 }
 
 export default class FileExplorer extends React.Component<FileExplorerProps, any> {
@@ -35,15 +37,15 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
         super(props)
         this.state = {
             projectName: 'Project',
-            tree: {}
+            tree: {},
         }
     }
 
     async renderItems(path: string) {
         return new Promise(async (resolve) => {
             readdir(path, async (err, files) => {
-                var tree = {};
-                for (var f of files) {
+                const tree = {};
+                for (let f of files) {
                     let file = join(path, f);
                     if (statSync(file).isDirectory()) {
                         tree[f] = await this.renderItems(file);
@@ -97,7 +99,7 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
 
     async changeFileTree(dir: string) {
         if (dir && !this.props.loading) {
-            await this.props.toggleLoading(true);
+            await this.props.toggleState({ loading: true });
             const dirList = dir.split('/');
             const lastDirName = dirList[dirList.length - 1];
             // this.renderItems() causes browser to hang for a while (sometimes very good while)
@@ -106,15 +108,13 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
             setTimeout(async () => {
                 const tree = await this.renderItems(dir);
                 await this.setState({ tree, projectName: lastDirName });
-                await this.props.toggleLoading(false)
+                await this.props.toggleState({ loading: false });
                 await localStorage.setItem(LOCALSTORAGE_PROJECT_PATH, dir);
             }, 100);
         }
     }
 
-
     async componentDidMount() {
-
         var onChange = debounce((type, file) => {
             Nuclear.Editor.externalChange(type, file);
         }, 1000);
@@ -124,19 +124,18 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
                 const data: string[] | undefined = await electron.remote.dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory', 'multiSelections'] })
                 console.log('files', data)
                 await this.changeFileTree(data[0])
+                await this.props.toggleState({ path: data[0] })
             } catch (e) {
                 // no-op
                 console.log('e', e);
             }
-        })
+        });
+        window.addEventListener('keydown', this.props.toggleFileSearch)
         const openedProject = localStorage.getItem(LOCALSTORAGE_PROJECT_PATH);
-        if (openedProject) {
+        if (openedProject && !this.state.path) {
             console.log('loading from localstorage', openedProject);
             await this.changeFileTree(openedProject)
+            await this.props.toggleState({ path: openedProject })
         }
-    }
-    componentWillUnmount() {
-        // this.watch.close();
-        WindowEvents.on('open', () => { });
     }
 }

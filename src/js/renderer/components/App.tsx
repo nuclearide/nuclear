@@ -1,32 +1,78 @@
-import * as React from 'react';
-import FileExplorer from './FileExplorer';
-import TabBar from './TabBar';
-import Emulator from './Emulator';
-import Toolbar from './Toolbar';
-import Terminal from './Terminal';
+import * as React from "react";
+import FileExplorer from "./FileExplorer";
+import TabBar from "./TabBar";
+import Emulator from "./Emulator";
+import Toolbar from "./Toolbar";
+import Terminal from "./Terminal";
 
-import { Layout } from 'antd'
+import { Layout, Modal } from "antd";
+import { readdir, statSync } from "fs";
+import { join } from "path";
+import { USED_HOTKEYS } from "../../utils/constants";
+import FileSearchModal from "./FileSearchModal";
+import { Nuclear } from "../../Nuclear";
 
 export default class App extends React.Component {
 
     state = {
         loading: false,
+        foundFiles: [],
+        showFileSearchModal: false,
+        path: '',
+    };
+
+    private toggleState = (newState: object) => this.setState(newState);
+
+    private handleSelectFile = async (path: string) => {
+        await this.setState({ showFileSearchModal: false });
+        Nuclear.Editor.open(path);
     }
 
-    toggleLoadingTree = async (loading: boolean) => {
-        await this.setState({ loading: loading })
-    }
+    private handleFileSearch = async (path: string) => {
+        // reset files list
+        await this.setState({ foundFiles: [] });
+        await readdir(path, async (err, files) => {
+            for (let f of files) {
+                let file = join(path, f);
+                if (!statSync(file).isDirectory()) {
+                    console.log("found file", f);
+                    this.setState({
+                        foundFiles: [...this.state.foundFiles, { name: f, path: file }],
+                        showFileSearchModal: true
+                    });
+                    window["PATHS"] = this.state.foundFiles;
+                }
+            }
+        });
+        console.log("found files", this.state.foundFiles, path);
+    };
+    private closeFileSearch = () => this.setState({ showFileSearchModal: false });
+
+    public toggleFileSearch = (e: KeyboardEvent) => {
+        if (e.metaKey && e.shiftKey && e.code === USED_HOTKEYS.O && this.state.path) {
+            this.handleFileSearch(this.state.path);
+        }
+    };
 
     render() {
         return (
             <Layout>
                 {/* <Toolbar/> */}
-                <Layout.Sider style={{ background: '#fff' }} width={400}>
+                <FileSearchModal
+                    onCancel={this.closeFileSearch}
+                    visible={this.state.showFileSearchModal}
+                    path={this.state.path}
+                    foundFiles={this.state.foundFiles}
+                    onSelect={this.handleSelectFile}
+                />
+                <Layout.Sider style={{ background: "#fff" }} width={400}>
                     <br />
                     {this.state.loading ? <h4 style={{ marginLeft: 10 }}>Loading</h4> : null}
                     {/* <progress id="progress"/> */}
                     <FileExplorer
-                        toggleLoading={async (val: boolean) => await this.toggleLoadingTree(val)}
+                        path={this.state.path}
+                        toggleFileSearch={this.toggleFileSearch}
+                        toggleState={this.toggleState}
                         loading={this.state.loading}
                     />
                 </Layout.Sider>
