@@ -1,6 +1,40 @@
 @import "editor";
 @import "https://cdn.rawgit.com/xtermjs/xterm.js/master/src/xterm.css";
 // @import "../../lib/radioactive/src/index.less";
+@fg: #f5f5f5;
+@bg: lighten(#282a36, 5%);
+
+.inline-error {
+    font-family: "Monospaced Number", "Chinese Quote", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif!important;
+    color: white;
+    background: #f5222d;
+    height: 100%;
+    padding: 6px;
+    border-radius: 4px;
+    line-height: 24px;
+}
+.ant-tree-title {
+    color: @fg;
+}
+.ant-tree-switcher {
+    color: @fg!important;
+    background: transparent!important;
+}
+
+.ant-tree-child-tree li:before {
+    border: none!important;
+}
+
+.ant-tree li .ant-tree-node-content-wrapper:hover, .ant-tree li .ant-tree-node-content-wrapper.ant-tree-node-selected {
+    background: @fg!important;
+    span {
+        color: black;
+    }
+}
+
+.ant-layout-sider {
+    background: @bg!important;
+}
 
 // body {
 //     font-family: 'Open Sans';

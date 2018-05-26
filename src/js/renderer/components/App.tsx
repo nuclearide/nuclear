@@ -65,7 +65,7 @@ export default class App extends React.Component {
                     foundFiles={this.state.foundFiles}
                     onSelect={this.handleSelectFile}
                 />
-                <Layout.Sider style={{ background: "#fff" }} width={400}>
+                <Layout.Sider width={400}>
                     <br />
                     {this.state.loading ? <h4 style={{ marginLeft: 10 }}>Loading</h4> : null}
                     {/* <progress id="progress"/> */}

@@ -10,7 +10,7 @@ import "codemirror/addon/lint/lint";
 import "codemirror/keymap/sublime";
 var fs = require('fs');
 import { compile, h } from "../lib/LSHost";
-import { Icon, Row, Col } from 'antd';
+import { Icon, Row, Col, Button } from 'antd';
 import { EditorEvents, Nuclear } from "../../Nuclear";
 import { parse } from "path";
 import { spawn } from "child_process";
@@ -20,16 +20,16 @@ import TSClient from '../../../../lib/tsclient';
 import * as ts from 'typescript';
 import { writeFileSync } from "fs";
 import { debounce } from "lodash";
-import { createPortal } from 'react-dom';
+import { createPortal, render } from 'react-dom';
 
 var imageTypes = ['.png', '.jpg', '.svg'];
 
-var tsserver = spawn('./node_modules/.bin/tsserver');
-var i = createInterface(tsserver.stdout);
+// var tsserver = spawn('./node_modules/.bin/tsserver');
+// var i = createInterface(tsserver.stdout);
 
 function Autocomplete(props) {
     return createPortal(
-        <div style={{ height: '100px', position: "absolute", zIndex: 5000, background: "gray", width: '200px', overflow: "scroll", left: props.left + "px", top: props.top + "px" }}>
+        <div style={{ height: '100px', position: "absolute", zIndex: 5000, background: "#f5f5f5", borderRadius: 5, padding: 5, width: '200px', overflow: "scroll", left: props.left + "px", top: props.top + "px" }}>
             {props.completions.map(({ name }, key) => {
                 return <div key={key}>{name}</div>
             })}
@@ -98,7 +98,18 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             syntaxErrors = errors;
             this.c["performLint"]();
         });
+        var widgets = [];
         tsclient.on("semanticDiag", (errs) => {
+            widgets.forEach(widget => widget.clear());
+
+            errs.diagnostics.forEach((diagnostic) => {
+                var el = <div className="inline-error">{diagnostic.text}<Button style={{ float: 'right' }} size="small" type="primary">fix</Button></div>;
+                var div = document.createElement('div');
+                div.style.height = "36px";
+                div.style.margin = "2px";
+                render(el, div);
+                widgets.push(this.c.addLineWidget(diagnostic.start.line - 1, div));
+            })
             var errors = errs.diagnostics.map((diagnostic) => {
                 return {
                     from: CodeMirror.Pos(diagnostic.start.line - 1, diagnostic.start.offset - 1),

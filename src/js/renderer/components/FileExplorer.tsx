@@ -63,7 +63,8 @@ export default class FileExplorer extends React.Component<FileExplorerProps, any
             left: "-19px",
             top: "4px",
             position: "absolute",
-            background: "white"
+            background: '#262626',
+            color: "white"
         };
         return Object.keys(tree).map((file, key) => {
             if (typeof tree[file] == "object") {
