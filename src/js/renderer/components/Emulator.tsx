@@ -9,6 +9,7 @@ import { spawn } from 'node-pty';
 import { EventEmitter } from 'events';
 import { ITerminal } from 'node-pty/lib/interfaces';
 import { Terminal } from 'xterm';
+import List from "antd/lib/list";
 
 const electron = require('electron');
 const BrowserWindow = electron.remote.BrowserWindow;
@@ -24,6 +25,7 @@ export default class Emulator extends React.Component {
         path: '',
         loading: false,
         availableClasses: [],
+        previewLogs: [],
         noDefaultClass: false,
     }
     toggleWebViewDevTools = () => {
@@ -61,6 +63,7 @@ export default class Emulator extends React.Component {
     reloadContainer = () => {
         const webview = document.querySelector('webview');
         webview.reload();
+        this.setState({ previewLogs: [] })
     }
 
     async lintFile(file = this.state.path) {
@@ -88,7 +91,7 @@ export default class Emulator extends React.Component {
         console.log('file', file)
         // this.renderFileComponent(file[0]);
         // const bundle = await this.loadFileWithParcel(file[0]);
-        await this.setState({ path: file });
+        await this.setState({ path: file, previewLogs: [] });
         await this.lintFile(file);
         const template = `
             var React = require('react');
@@ -127,6 +130,10 @@ export default class Emulator extends React.Component {
         this.w = document.querySelector('#previews');
         // w.getWebContents().openDevTools();
         this.w.src = 'http://localhost:8998';
+        this.w.addEventListener('console-message', (e) => {
+            console.log('Guest page logged a message:', e.message, e)
+            this.setState({ previewLogs: [...this.state.previewLogs, e] })
+        })
     }
 
     delintViaTs = (path) => {
@@ -136,6 +143,34 @@ export default class Emulator extends React.Component {
         // delint it
         return delint(sourceFile);
     };
+
+    renderLogMessage = (e) => {
+        const LogItem = (props: { style?, text, title? }) => {
+            return (
+                <List.Item
+                    style={{
+                        paddingLeft: 10,
+                        paddingRight: 10,
+                        borderRadius: 10,
+                        ...props.style
+                    }}
+                >
+                    <List.Item.Meta
+                        title={props.title || "Message"}
+                        description={props.text}
+                    />
+                </List.Item>
+            )
+        }
+        switch (e.level) {
+            case 1:
+                return <LogItem style={{ backgroundColor: "#fff2e8" }} text={e.message} title={"Warning"}/>;
+            case 2:
+                return <LogItem style={{ backgroundColor: "#f5222d" }} text={e.message} title={"Error"} />;
+            default:
+                return <LogItem style={{ backgroundColor: "#fafafa" }} text={e.message} />
+        }
+    }
 
     render() {
         return (
@@ -155,6 +190,14 @@ export default class Emulator extends React.Component {
                             </Row>
                             <webview id={'previews'} style={{ height: '100%' }}></webview>
                         </Spin>
+                    </Tabs.TabPane>
+                    <Tabs.TabPane disabled={Boolean(this.state.loading)} tab="Preview log" key="3" forceRender={true}>
+                        <div style={{ padding: 10 }}>
+                            <List
+                                dataSource={this.state.previewLogs}
+                                renderItem={this.renderLogMessage}
+                            />
+                        </div>
                     </Tabs.TabPane>
                     <Tabs.TabPane tab="Console" key="2" forceRender={true}>
                         <div ref={terminalContainer => this.terminalContainer = terminalContainer}></div>
