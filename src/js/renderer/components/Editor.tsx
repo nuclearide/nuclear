@@ -21,6 +21,7 @@ import * as ts from 'typescript';
 import { writeFileSync } from "fs";
 import { debounce } from "lodash";
 import { createPortal, render } from 'react-dom';
+import { ipcRenderer } from 'electron';
 
 var imageTypes = ['.png', '.jpg', '.svg'];
 
@@ -168,9 +169,10 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             this.setState({ isImage: false, filePath: this.props.file });
         }
 
-        EditorEvents.on('save', () => {
-            console.log('saving');
+        ipcRenderer.on('save', () => {
+            console.log('saving', this.state.filePath);
             writeFileSync(this.state.filePath, this.c.getValue());
+            EditorEvents.emit('save', this.state.filePath);
         })
         // this.setState({loading: true});
         // var res = await FileSystem.readFile(this.props.file);

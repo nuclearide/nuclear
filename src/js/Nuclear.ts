@@ -95,7 +95,6 @@ ipcRenderer.on('open', () => {
 //
 ipcRenderer.on('save', () => {
     console.log('save')
-    EditorEvents.emit('save');
 });
 //
 // ipcRenderer.on('close', () => {
