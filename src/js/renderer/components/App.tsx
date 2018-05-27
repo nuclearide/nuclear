@@ -28,9 +28,7 @@ export default class App extends React.Component {
         Nuclear.Editor.open(path);
     }
 
-    private handleFileSearch = async (path: string) => {
-        // reset files list
-        await this.setState({ foundFiles: [] });
+    private findFiles = async (path: string) => {
         await readdir(path, async (err, files) => {
             for (let f of files) {
                 let file = join(path, f);
@@ -41,9 +39,17 @@ export default class App extends React.Component {
                         showFileSearchModal: true
                     });
                     window["PATHS"] = this.state.foundFiles;
+                } else {
+                    await this.findFiles(file);
                 }
             }
         });
+    }
+
+    private handleFileSearch = async (path: string) => {
+        // reset files list
+        await this.setState({ foundFiles: [] });
+        this.findFiles(path)
         console.log("found files", this.state.foundFiles, path);
     };
     private closeFileSearch = () => this.setState({ showFileSearchModal: false });

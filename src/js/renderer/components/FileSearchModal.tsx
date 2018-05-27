@@ -33,7 +33,7 @@ export default class FileSearchModal extends React.Component<FileSearchModalProp
         const { foundFiles } = this.props;
         const newData = foundFiles
             .map(f => {
-                if (f.name.includes(val)) {
+                if (f.name.toUpperCase().includes(val.toUpperCase())) {
                     return f;
                 }
             })
