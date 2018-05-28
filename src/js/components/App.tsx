@@ -34,6 +34,8 @@ export default class App extends React.Component {
     private findFiles = async (path: string) => {
         await readdir(path, async (err, files) => {
             for (let f of files) {
+                if (f == "node_modules" || f == ".git") continue;
+
                 let file = join(path, f);
                 if (!statSync(file).isDirectory()) {
                     console.log("found file", f);
@@ -52,7 +54,7 @@ export default class App extends React.Component {
     private handleFileSearch = async (path: string) => {
         // reset files list
         await this.setState({ foundFiles: [] });
-        this.findFiles(path)
+        this.findFiles(path);
         console.log("found files", this.state.foundFiles, path);
     };
     private closeFileSearch = () => this.setState({ showFileSearchModal: false });
@@ -95,13 +97,13 @@ export default class App extends React.Component {
                     <Layout.Content>
                         <TabBar />
                         <Emulator />
-                        <SettingsContext.Consumer>
+                        {/* <SettingsContext.Consumer>
                             {
                                 (val) => {
                                     return <><Settings /><span>{JSON.stringify(val)}</span></>
                                 }
                             }
-                        </SettingsContext.Consumer>
+                        </SettingsContext.Consumer> */}
                     </Layout.Content>
                 </Layout>
             </SettingsContext.Provider>

@@ -62,7 +62,7 @@ export default class FileSearchModal extends React.Component<FileSearchModalProp
                     onSearch={this.handleSearch}
                     optionLabelProp={'name'}
                 >
-                    {this.state.data.map((m) => (<AutoComplete.Option value={m.path}>{m.name} ({m.path})</AutoComplete.Option>))}
+                    {this.state.data.map((m, k) => (<AutoComplete.Option key={k} value={m.path}>{m.name} ({m.path})</AutoComplete.Option>))}
                 </AutoComplete>
             </Modal>
         );

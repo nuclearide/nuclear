@@ -39,6 +39,21 @@ function Autocomplete(props) {
         document.body
     )
 }
+
+if (module.hot) {
+    module.hot.dispose(function () {
+        tsclient.kill();
+    });
+    module.hot.accept(function () {
+        tsclient = new TSClient({
+            cwd: Nuclear.getProjectRoot()
+        })
+    });
+}
+var tsclient = new TSClient({
+    cwd: Nuclear.getProjectRoot()
+})
+
 export default class Editor extends React.Component<{ file: string }, { isImage: boolean, filePath: string, errors: any[], completions: any[], pos: number[] }> {
     private codemirrorDiv: HTMLElement;
     private c: CodeMirror.Editor;
@@ -70,22 +85,9 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
     }
 
     async componentDidMount() {
-        if (module.hot) {
-            module.hot.dispose(function () {
-                tsclient.close();
-            });
-            module.hot.accept(function () {
-                tsclient = new TSClient({
-                    cwd: Nuclear.getProjectRoot()
-                })
-            });
-        }
-        var tsclient = new TSClient({
-            cwd: Nuclear.getProjectRoot()
-        })
         this.c = CodeMirror(this.codemirrorDiv, {
             lineNumbers: true,
-            theme: "vibrancy",
+            theme: "default",
             mode: "text/typescript-jsx",
             keyMap: "sublime",
             gutters: ["CodeMirror-lint-markers"]
@@ -94,10 +96,6 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
         CodeMirror.registerHelper("lint", "javascript", () => {
             return syntaxErrors.concat(semanticErrors);
         });
-
-        settingsProvider.on('change', () => {
-            this.c.setOption("theme", settingsProvider.get("theme"));
-        })
 
         this.c.setSize('100%', '100%');
         tsclient.open(this.props.file);
@@ -238,7 +236,9 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
         // });
         // var fileName = this.props.file.split("/").slice(-1)[0];
     }
-
+    componentWillUnmount() {
+        tsclient.close(this.props.file);
+    }
     componentWillReceiveProps(props) {
         if (props.file) {
             if (~imageTypes.indexOf(parse(props.file).ext)) {
