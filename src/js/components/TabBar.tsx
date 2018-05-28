@@ -1,5 +1,5 @@
 import React from "react";
-import { Nuclear } from "../../Nuclear";
+import { Nuclear } from "../lib/Nuclear";
 import { Editors } from "./Editors";
 import { parse } from "path";
 import { Tabs, Icon } from "antd";

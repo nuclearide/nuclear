@@ -8,9 +8,11 @@ import Terminal from "./Terminal";
 import { Layout, Modal } from "antd";
 import { readdir, statSync } from "fs";
 import { join } from "path";
-import { USED_HOTKEYS } from "../../utils/constants";
+import { USED_HOTKEYS } from "../utils/constants";
 import FileSearchModal from "./FileSearchModal";
-import { Nuclear } from "../../Nuclear";
+import { Nuclear } from "../lib/Nuclear";
+import { settingsProvider, SettingsContext } from "../providers/SettingsProvider";
+import { Settings } from "./Settings";
 
 export default class App extends React.Component {
 
@@ -19,6 +21,7 @@ export default class App extends React.Component {
         foundFiles: [],
         showFileSearchModal: false,
         path: '',
+        settings: settingsProvider.get()
     };
 
     private toggleState = (newState: object) => this.setState(newState);
@@ -60,33 +63,48 @@ export default class App extends React.Component {
         }
     };
 
+    componentDidMount() {
+        settingsProvider.on('change', () => {
+            this.setState({ settings: settingsProvider.get() });
+        });
+    }
+
     render() {
         return (
-            <Layout>
-                {/* <Toolbar/> */}
-                <FileSearchModal
-                    onCancel={this.closeFileSearch}
-                    visible={this.state.showFileSearchModal}
-                    path={this.state.path}
-                    foundFiles={this.state.foundFiles}
-                    onSelect={this.handleSelectFile}
-                />
-                <Layout.Sider width={400}>
-                    <br />
-                    {this.state.loading ? <h4 style={{ marginLeft: 10 }}>Loading</h4> : null}
-                    {/* <progress id="progress"/> */}
-                    <FileExplorer
+            <SettingsContext.Provider value={this.state.settings}>
+                <Layout>
+                    {/* <Toolbar/> */}
+                    <FileSearchModal
+                        onCancel={this.closeFileSearch}
+                        visible={this.state.showFileSearchModal}
                         path={this.state.path}
-                        toggleFileSearch={this.toggleFileSearch}
-                        toggleState={this.toggleState}
-                        loading={this.state.loading}
+                        foundFiles={this.state.foundFiles}
+                        onSelect={this.handleSelectFile}
                     />
-                </Layout.Sider>
-                <Layout.Content>
-                    <TabBar />
-                    <Emulator />
-                </Layout.Content>
-            </Layout>
+                    <Layout.Sider width={400}>
+                        <br />
+                        {this.state.loading ? <h4 style={{ marginLeft: 10 }}>Loading</h4> : null}
+                        {/* <progress id="progress"/> */}
+                        <FileExplorer
+                            path={this.state.path}
+                            toggleFileSearch={this.toggleFileSearch}
+                            toggleState={this.toggleState}
+                            loading={this.state.loading}
+                        />
+                    </Layout.Sider>
+                    <Layout.Content>
+                        <TabBar />
+                        <Emulator />
+                        <SettingsContext.Consumer>
+                            {
+                                (val) => {
+                                    return <><Settings /><span>{JSON.stringify(val)}</span></>
+                                }
+                            }
+                        </SettingsContext.Consumer>
+                    </Layout.Content>
+                </Layout>
+            </SettingsContext.Provider>
         );
     }
 }

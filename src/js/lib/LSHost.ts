@@ -1,11 +1,10 @@
 import { readFileSync } from "fs";
 import * as ts from 'typescript';
-import { Neutrino } from "../../Neutrino";
 import { join } from "path";
-import { Nuclear } from "../../Nuclear";
+import { Nuclear } from "./Nuclear";
 
 class Host implements ts.CompilerHost {
-    _files: {[fileName: string]: ts.SourceFile} = {};
+    _files: { [fileName: string]: ts.SourceFile } = {};
     getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void, shouldCreateNewSourceFile?: boolean): ts.SourceFile {
         return this._files[fileName];
     }
@@ -87,11 +86,11 @@ export let h = new Host();
 //                 }
 //             }
 //         });
-        // if(file.indexOf('.d.ts')>-1) {
-        //     Neutrino.FileSystem.readFile(join(__dirname, '../../../../node_modules/typescript/lib', file), (res) => {
-        //         h.addFile("/node_modules/typescript/lib/" + file.split('/').slice(-1)[0], res);
-        //     })
-        // }
+// if(file.indexOf('.d.ts')>-1) {
+//     Neutrino.FileSystem.readFile(join(__dirname, '../../../../node_modules/typescript/lib', file), (res) => {
+//         h.addFile("/node_modules/typescript/lib/" + file.split('/').slice(-1)[0], res);
+//     })
+// }
 //     }
 // })
 // h.addFile("/Dropdown.tsx", readFileSync('./src/js/renderer/components/Dropdown.tsx', 'utf8'));
@@ -110,14 +109,14 @@ export let compile = (fileNames: string[]) => {
 
     // let allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
     var find = (node: ts.Node) => {
-        if(node.kind == ts.SyntaxKind.ImportDeclaration) {
+        if (node.kind == ts.SyntaxKind.ImportDeclaration) {
             ts.forEachChild(node, (node) => {
                 console.log(fileNames[0].split('/').slice(0, -1).join('/'));
-                
+
                 console.log(node.kind === ts.SyntaxKind.StringLiteral && node.getText().slice(1, -1));
             })
         } else {
-            ts.forEachChild(node, find);            
+            ts.forEachChild(node, find);
         }
     };
     ts.forEachChild(h.getSourceFile(fileNames[0], ts.ScriptTarget.ES2015), find);

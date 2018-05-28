@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Divider, Button, Spin, Icon, Row, Col, Tabs, Dropdown } from "antd";
 import * as path from "path";
-import { EditorEvents, Nuclear } from "../../Nuclear";
+import { EditorEvents, Nuclear } from "../lib/Nuclear";
 import * as ts from "typescript";
 import { readFileSync, writeFileSync } from "fs";
-import { delint } from "../../utils/delint";
+import { delint } from "../utils/delint";
 import { spawn } from 'node-pty';
 import { EventEmitter } from 'events';
 import { ITerminal } from 'node-pty/lib/interfaces';
@@ -185,7 +185,7 @@ export default class Emulator extends React.Component {
     };
 
     renderLogMessage = (e) => {
-        const LogItem = (props: { style?, text, title? }) => {
+        const LogItem = (props: { style?, text, title?}) => {
             return (
                 <List.Item
                     style={{
@@ -204,7 +204,7 @@ export default class Emulator extends React.Component {
         }
         switch (e.level) {
             case 1:
-                return <LogItem style={{ backgroundColor: "#fff2e8" }} text={e.message} title={"Warning"}/>;
+                return <LogItem style={{ backgroundColor: "#fff2e8" }} text={e.message} title={"Warning"} />;
             case 2:
                 return <LogItem style={{ backgroundColor: "#f5222d" }} text={e.message} title={"Error"} />;
             default:
@@ -248,7 +248,7 @@ export default class Emulator extends React.Component {
                                         </Dropdown> : null
                                 }
                                 <Icon title={"Reload component container"} style={{ width: 50 }} onClick={this.reloadContainer} type="reload" />
-                                { this.w && <Icon title={"Toggle container devtools"} style={{ width: 50 }} onClick={this.toggleWebViewDevTools} type="select" /> }
+                                {this.w && <Icon title={"Toggle container devtools"} style={{ width: 50 }} onClick={this.toggleWebViewDevTools} type="select" />}
                             </Row>
                             <webview id={'previews'} style={{ height: '100%' }}></webview>
                         </Spin>

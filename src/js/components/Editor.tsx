@@ -11,17 +11,18 @@ import "codemirror/keymap/sublime";
 var fs = require('fs');
 import { compile, h } from "../lib/LSHost";
 import { Icon, Row, Col, Button } from 'antd';
-import { EditorEvents, Nuclear } from "../../Nuclear";
+import { EditorEvents, Nuclear } from "../lib/Nuclear";
 import { parse } from "path";
 import { spawn } from "child_process";
 import { createInterface } from "readline";
-import TSClient from '../../../../lib/tsclient';
+import TSClient from '../../../lib/tsclient';
 
 import * as ts from 'typescript';
 import { writeFileSync } from "fs";
 import { debounce } from "lodash";
 import { createPortal, render } from 'react-dom';
 import { ipcRenderer } from 'electron';
+import { settingsProvider } from "../providers/SettingsProvider";
 
 var imageTypes = ['.png', '.jpg', '.svg'];
 
@@ -69,12 +70,22 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
     }
 
     async componentDidMount() {
+        if (module.hot) {
+            module.hot.dispose(function () {
+                tsclient.close();
+            });
+            module.hot.accept(function () {
+                tsclient = new TSClient({
+                    cwd: Nuclear.getProjectRoot()
+                })
+            });
+        }
         var tsclient = new TSClient({
             cwd: Nuclear.getProjectRoot()
         })
         this.c = CodeMirror(this.codemirrorDiv, {
             lineNumbers: true,
-            theme: "dracula",
+            theme: "vibrancy",
             mode: "text/typescript-jsx",
             keyMap: "sublime",
             gutters: ["CodeMirror-lint-markers"]
@@ -82,13 +93,27 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
         this.c.setOption('lint', { lintOnChange: false });
         CodeMirror.registerHelper("lint", "javascript", () => {
             return syntaxErrors.concat(semanticErrors);
+        });
+
+        settingsProvider.on('change', () => {
+            this.c.setOption("theme", settingsProvider.get("theme"));
         })
 
         this.c.setSize('100%', '100%');
         tsclient.open(this.props.file);
         var syntaxErrors = [];
         var semanticErrors = [];
+        var syntaxErrorWidgets = [];
         tsclient.on('syntaxDiag', (errs) => {
+            syntaxErrorWidgets.forEach(widget => widget.clear());
+            errs.diagnostics.forEach((diagnostic) => {
+                var el = <div className="inline-error">{diagnostic.text}<Button style={{ float: 'right' }} size="small" type="primary">fix</Button></div>;
+                var div = document.createElement('div');
+                div.style.height = "36px";
+                div.style.margin = "2px";
+                render(el, div);
+                syntaxErrorWidgets.push(this.c.addLineWidget(diagnostic.start.line - 1, div));
+            })
             var errors = errs.diagnostics.map((diagnostic) => {
                 return {
                     from: CodeMirror.Pos(diagnostic.start.line - 1, diagnostic.start.offset - 1),
@@ -99,9 +124,9 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             syntaxErrors = errors;
             this.c["performLint"]();
         });
-        var widgets = [];
+        var semanticErrorWidgets = [];
         tsclient.on("semanticDiag", (errs) => {
-            widgets.forEach(widget => widget.clear());
+            semanticErrorWidgets.forEach(widget => widget.clear());
 
             errs.diagnostics.forEach((diagnostic) => {
                 var el = <div className="inline-error">{diagnostic.text}<Button style={{ float: 'right' }} size="small" type="primary">fix</Button></div>;
@@ -109,7 +134,7 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
                 div.style.height = "36px";
                 div.style.margin = "2px";
                 render(el, div);
-                widgets.push(this.c.addLineWidget(diagnostic.start.line - 1, div));
+                semanticErrorWidgets.push(this.c.addLineWidget(diagnostic.start.line - 1, div));
             })
             var errors = errs.diagnostics.map((diagnostic) => {
                 return {

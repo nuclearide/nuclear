@@ -1,14 +1,14 @@
 import * as React from 'react';
-import {render} from 'react-dom';
+import { render } from 'react-dom';
 import App from './components/App';
-import { Nuclear } from '../Nuclear';
+import { Nuclear } from './lib/Nuclear';
 
 // import { readdir } from 'fs';
 
-render(<App/>, document.getElementById('root'));
+render(<App />, document.getElementById('root'));
 
 var getPlatform = () => {
-    switch(process.platform) {
+    switch (process.platform) {
         case "win32":
             return "windows";
         case "darwin":
@@ -27,7 +27,7 @@ document.body.classList.add(getPlatform());
 // });
 
 addEventListener('beforeunload', () => {
-    for(var plugin in Nuclear.Plugins.plugins()) {
+    for (var plugin in Nuclear.Plugins.plugins()) {
         Nuclear.Plugins.unload(plugin);
     }
 });

@@ -6,7 +6,7 @@ import Input from "antd/lib/input/Input";
 import Button from "antd/lib/button/button";
 import Icon from "antd/lib/icon";
 import { AppContext } from "./App";
-import { Nuclear } from "../../Nuclear";
+import { Nuclear } from "../lib/Nuclear";
 
 interface FileSearchModalProps extends ModalProps {
     visible: boolean;

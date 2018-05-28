@@ -4,11 +4,11 @@ app.on("ready", () => {
     const window = new BrowserWindow({
         width: 600,
         height: 400,
-        backgroundColor: '#23262F',
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             webSecurity: false
-        }
+        },
+        vibrancy: "dark"
     });
     // if (process.env.NODE_ENV === "development") {
     //     window.loadURL(`http://localhost:1234`);

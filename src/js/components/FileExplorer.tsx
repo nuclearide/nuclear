@@ -2,11 +2,11 @@ import * as React from 'react';
 import { readdir, readdirSync, statSync, watch, FSWatcher } from 'fs';
 
 import { join, resolve, basename } from 'path';
-import { Nuclear, WindowEvents } from "../../Nuclear";
+import { Nuclear, WindowEvents } from "../lib/Nuclear";
 
 import { Tree, Icon } from 'antd';
 import * as electron from "electron";
-import { LOCALSTORAGE_PROJECT_PATH, USED_HOTKEYS } from "../../utils/constants";
+import { LOCALSTORAGE_PROJECT_PATH, USED_HOTKEYS } from "../utils/constants";
 const TreeNode = Tree.TreeNode;
 
 var debounce = function (func, wait, immediate?) {

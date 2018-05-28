@@ -1,10 +1,10 @@
 import React from "react";// import 'codemirror/addon/selection/active-line';
 // import { EditorConfiguration, fromTextArea, Doc, Position, Pass } from "codemirror";
-import { Nuclear } from "../../Nuclear";
+import { Nuclear } from "../lib/Nuclear";
 import { readFile, writeFileSync } from "fs";
 import { parse, join, resolve } from "path";
 
-import { Uranium as UraniumServer, FileSystemProvider, Plugin } from "../../../../lib/uranium";
+import { Uranium as UraniumServer, FileSystemProvider, Plugin } from "../../../lib/uranium";
 // var {Uranium} = require('../../../../lib/uranium/dist/index');
 // var FSProvider = require('../../../../lib/uranium/dist/filesystem/fs').default;
 
@@ -14,7 +14,7 @@ import { Uranium as UraniumServer, FileSystemProvider, Plugin } from "../../../.
 
 // import { remote, NativeImage, nativeImage } from 'electron';
 // require("codemirror/theme/night.css");
-import {FileSystem} from 'neutrino';
+import { FileSystem } from 'neutrino';
 import Editor from "./Editor";
 
 // var {TouchBar} = remote;
