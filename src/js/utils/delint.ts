@@ -11,21 +11,36 @@ export function delint(sourceFile: ts.SourceFile) {
 
     function delintNode(node: ts.Node) {
         switch (node.kind) {
-            case ts.SyntaxKind.DefaultKeyword:
-                const defaultClassName = _.at(node.parent, 'name.escapedText')[0];
-                console.log('default keyword', node);
+            case ts.SyntaxKind.ExportAssignment:
+                console.log("[DELINt] found export default assignment", node)
+                const className = node.expression.escapedText;
+                result.defaultExport = className;
+                result.classNames.push(className);
+                break;
+            case ts.SyntaxKind.NamedExports:
+                console.log("[DELINt] at kindexport named exports", node)
+                node.elements.forEach(e => result.classNames.push(e.name.escapedText))
+                break;
+        }
+        switch (ts.getCombinedModifierFlags(node)) {
+            case ts.ModifierFlags.ExportDefault:
+                const defaultClassName = _.at(node.name, 'escapedText')[0];
+                console.log('[DELINt] found export default declaration', node);
                 if (defaultClassName) {
                     console.log('default class declaration', defaultClassName)
                     result.defaultExport = defaultClassName;
+                    result.classNames.push(defaultClassName);
                 }
                 break;
-            case ts.SyntaxKind.ClassDeclaration:
+            case ts.ModifierFlags.Export:
                 const className = _.at(node.name, 'escapedText')[0];
+                console.log('[DELINt] class export declaration', node)
                 if (className) {
                     console.log("class declaration", className);
                     result.classNames.push(className);
                     report(node, "class declaration found");
-                };
+                }
+                break;
         }
 
         ts.forEachChild(node, delintNode);

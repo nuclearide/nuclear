@@ -77,6 +77,7 @@ export default class Emulator extends React.Component {
             return;
         }
         const delinted = await this.delintViaTs(file);
+        console.log("DELINTED!!!", delinted);
         let availableClasses = [];
         // Used for detecting if no default class present
         // If yes, try to render first class of classnames
@@ -85,12 +86,11 @@ export default class Emulator extends React.Component {
         let defaultClass = this.state.defaultClass || '';
         let selectedClass = '';
         if (delinted.defaultExport && (this.state.selectDefaultClass || !this.state.selectedClass)) {
-            console.log("has default export", delinted);
             availableClasses = delinted.classNames.filter(c => c !== delinted.defaultExport);
             selectedClass = delinted.defaultExport;
             defaultClass = delinted.defaultExport;
         } else {
-            availableClasses = delinted.classNames.filter(c => c.length && c !== this.state.selectedClass);
+            availableClasses = delinted.classNames.filter(c => c.length);
             hasDefaultClass = false;
             selectedClass = this.state.selectedClass;
             // Checking if has available classes after filtering by length above
@@ -99,10 +99,16 @@ export default class Emulator extends React.Component {
             if (availableClasses.length && !this.state.selectedClass) {
                 console.log('choosing first class because selected class was not set')
                 selectedClass = availableClasses[0];
-            } else {
-                console.log('default behavior was not triggered', this.state)
             }
         }
+        console.log("will set new classes state",
+            {
+                availableClasses,
+                hasDefaultClass,
+                selectedClass,
+                defaultClass,
+            }
+        )
         await this.setState({
             availableClasses,
             hasDefaultClass,
@@ -116,13 +122,12 @@ export default class Emulator extends React.Component {
         console.log('file', file)
         // this.renderFileComponent(file[0]);
         // const bundle = await this.loadFileWithParcel(file[0]);
-        await this.setState({ path: file, previewLogs: [] });
+        await this.setState({
+            path: file,
+            previewLogs: [],
+        });
         await this.lintFile(file);
-        if (!this.state.hasDefaultClass && !this.state.availableClasses.length) {
-            console.log("returning because no default class and no availableclasses", this.state);
-            return;
-        }
-        console.log("state", this.state);
+        console.log('Linting ended')
         const getComponentImport = (path: string, component) => {
             if (this.state.hasDefaultClass) {
                 console.log("returning default import");
@@ -133,7 +138,6 @@ export default class Emulator extends React.Component {
         };
         const Component = this.state.hasDefaultClass && this.state.defaultClass ? this.state.defaultClass : this.state.selectedClass;
         const filePath = `'../${path.relative(Nuclear.getProjectRoot(), file)}'`;
-        console.log('state at load file', this.state)
         const template = `
             var React = require('react');
             ${getComponentImport(filePath, Component)}
