@@ -35,16 +35,17 @@ function Autocomplete(props) {
         doc = props.completionDetails[0].displayParts.map(({ text }) => text).join("");
     }
     setTimeout(() => {
-        document.getElementById("completion" + props.completionIndex).scrollIntoView({ behavior: "smooth" });
+        var el = document.getElementById("completion" + props.completionIndex);
+        el && el.scrollIntoView({ behavior: "smooth" });
     }, 10);
     return <>
         <div style={{ height: '200px', display: 'flex', background: "#f5f5f5", borderRadius: 5, padding: 5, width: 'auto', overflow: "scroll", left: props.left + "px", top: props.top + "px" }}>
-            <ul style={{ display: 'inline-block', overflow: 'scroll' }}>
+            <ul style={{ display: 'inline-block', overflowY: 'auto', overflowX: 'hidden', margin: 0, flex: 1 }}>
                 {props.completions.map(({ name }, key) => {
                     return <li key={key} id={"completion" + key}>{key == props.completionIndex && "->"} {name} {key == props.completionIndex && "<-"} </li>
                 })}
             </ul>
-            <pre style={{ display: 'inline-block', width: 400, verticalAlign: 'top', background: 'rgba(0, 0, 0, .3)' }}>
+            <pre style={{ display: 'inline-block', flex: 1, verticalAlign: 'top', background: 'rgba(0, 0, 0, .3)' }}>
                 {doc}
             </pre>
         </div>
@@ -66,6 +67,7 @@ var tsclient = new TSClient({
 })
 
 export default class Editor extends React.Component<{ file: string }, { isImage: boolean, filePath: string, errors: any[], completions: any[], pos: number[], completionIndex: number, completionDetails: any }> {
+    completionWidget: any;
     private codemirrorDiv: HTMLElement;
     private c: CodeMirror.Editor;
     private completionDiv: HTMLDivElement;
@@ -110,11 +112,21 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
                     } else {
                         let { ch, line } = this.c.getDoc().getCursor();
                         tsclient.getCompletionEntryDetails(this.props.file, line + 1, ch + 1, [this.state.completions[this.state.completionIndex + 1]]).then(({ body }) => {
-                            this.completionDiv
                             this.setState({ completionIndex: this.state.completionIndex + 1, completionDetails: body }, () => {
                                 render(<Autocomplete completions={this.state.completions} completionDetails={this.state.completionDetails} completionIndex={this.state.completionIndex} left={this.state.pos[0]} top={this.state.pos[1]} />, this.completionDiv);
                             });
                         })
+                    }
+                },
+                Enter: () => {
+                    if (this.state.completions.length == 0) {
+                        return CodeMirror.Pass;
+                    } else {
+                        var pos = this.c.getDoc().getCursor();
+                        var tok = this.c.getTokenAt(pos);
+                        this.c.getDoc().replaceRange(this.state.completions[this.state.completionIndex].name, { line: pos.line, ch: tok.start }, { line: pos.line, ch: tok.end });
+                        this.completionWidget && this.completionWidget.clear();
+                        this.setState({ completions: [] });
                     }
                 },
                 Up: () => {
@@ -184,20 +196,21 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
             semanticErrors = errors;
             this.c["performLint"]();
         });
-        var completionWidget;
         var getCompletions = debounce(async (line, offset) => {
-            completionWidget && completionWidget.clear();
+            this.completionWidget && this.completionWidget.clear();
             let prefix = this.c.getTokenAt(CodeMirror.Pos(line, offset + 1)).string;
             // console.log(prefix);
             var res = await tsclient.getCompletions(this.props.file, line + 1, offset + 1, prefix && prefix == "." ? undefined : prefix);
             var results = res.body;
-            this.completionDiv = document.createElement('div');
-            completionWidget = this.c.addLineWidget(line, this.completionDiv);
+            if (results.length > 0) {
+                this.completionDiv = document.createElement('div');
+                this.completionWidget = this.c.addLineWidget(line, this.completionDiv);
+            }
 
             // console.log(await tsclient.getDefinition(this.props.file, 6, 22));
             // console.log(results);
             this.setState({ completions: results }, () => {
-                render(<Autocomplete completions={this.state.completions} completionDetails={this.state.completionDetails} completionIndex={this.state.completionIndex} left={this.state.pos[0]} top={this.state.pos[1]} />, this.completionDiv);
+                results.length > 0 && render(<Autocomplete completions={this.state.completions} completionDetails={this.state.completionDetails} completionIndex={this.state.completionIndex} left={this.state.pos[0]} top={this.state.pos[1]} />, this.completionDiv);
             });
         }, 200);
         var getErr = debounce(() => {
@@ -215,8 +228,7 @@ export default class Editor extends React.Component<{ file: string }, { isImage:
         })
 
         this.c.on('mousedown', () => {
-
-            completionWidget && completionWidget.clear();
+            this.completionWidget && this.completionWidget.clear();
             this.setState({ completions: [] });
         });
 
