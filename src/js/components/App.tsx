@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import FileExplorer from "./FileExplorer";
 import TabBar from "./TabBar";
 import Emulator from "./Emulator";
@@ -14,7 +14,7 @@ import { Nuclear } from "../lib/Nuclear";
 import { settingsProvider, SettingsContext } from "../providers/SettingsProvider";
 import { Settings } from "./Settings";
 
-export default class App extends React.Component {
+export default class App extends React.Component<any, any> {
 
     state = {
         loading: false,

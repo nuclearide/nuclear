@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { ModalProps } from "antd/lib/modal";
 import Modal from "antd/lib/modal/Modal";
 import AutoComplete, { DataSourceItemType } from "antd/lib/auto-complete";
@@ -16,15 +16,15 @@ interface FileSearchModalProps extends ModalProps {
 }
 
 type FileSearchModalState = {
-    value: string;
-    data: Array<{ name: string, path: string }>
+    value?: string;
+    data?: Array<{ name: string, path: string }>
 }
 
 const Option = AutoComplete.Option;
 
-export default class FileSearchModal extends React.Component<FileSearchModalProps> {
+export default class FileSearchModal extends React.Component<FileSearchModalProps, FileSearchModalState> {
 
-    state: FileSearchModalState = {
+    state = {
         value: '',
         data: [],
     }
@@ -58,7 +58,7 @@ export default class FileSearchModal extends React.Component<FileSearchModalProp
                     size="large"
                     style={{ width: '100%' }}
                     onSelect={this.props.onSelect}
-                    onChange={(value) => this.setState({ value })}
+                    onChange={(value) => this.setState({ value: value.toString() })}
                     onSearch={this.handleSearch}
                     optionLabelProp={'name'}
                 >

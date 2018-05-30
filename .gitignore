@@ -3,3 +3,4 @@ build
 dist
 .cache
 yarn-error.log
+preview/PreviewComponent.tsx

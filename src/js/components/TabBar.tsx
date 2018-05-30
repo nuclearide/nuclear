@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { Nuclear } from "../lib/Nuclear";
 import { Editors } from "./Editors";
 import { parse } from "path";

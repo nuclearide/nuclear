@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Divider, Button, Spin, Icon, Row, Col, Tabs, Dropdown } from "antd";
 import * as path from "path";
 import { EditorEvents, Nuclear } from "../lib/Nuclear";
@@ -15,7 +15,7 @@ import Menu from "antd/lib/menu";
 const electron = require('electron');
 const BrowserWindow = electron.remote.BrowserWindow;
 
-export default class Emulator extends React.Component {
+export default class Emulator extends React.Component<any, any> {
 
     terminalContainer: HTMLDivElement;
     term: Terminal;
@@ -143,7 +143,7 @@ export default class Emulator extends React.Component {
             ${getComponentImport(filePath, Component)}
             var render = require('react-dom').render;
             render(<${Component}/>, document.getElementById("root"));
-            
+
             `;
         writeFileSync(path.resolve(Nuclear.getProjectRoot(), "preview/PreviewComponent.tsx"), template);
         writeFileSync(path.resolve(Nuclear.getProjectRoot(), "preview/index.html"), `

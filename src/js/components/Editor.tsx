@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import CodeMirror from "codemirror";
 import "codemirror/mode/javascript/javascript";
 import "codemirror/mode/xml/xml";
@@ -38,8 +38,7 @@ function Autocomplete(props) {
         var el = document.getElementById("completion" + props.completionIndex);
         el && el.scrollIntoView({ behavior: "smooth" });
     }, 10);
-    return <>
-        <div style={{ height: '200px', display: 'flex', background: "#f5f5f5", borderRadius: 5, padding: 5, width: 'auto', overflow: "scroll", left: props.left + "px", top: props.top + "px" }}>
+    return <div style={{ height: '200px', display: 'flex', background: "#f5f5f5", borderRadius: 5, padding: 5, width: 'auto', overflow: "scroll", left: props.left + "px", top: props.top + "px" }}>
             <ul style={{ display: 'inline-block', overflowY: 'auto', overflowX: 'hidden', margin: 0, flex: 1 }}>
                 {props.completions.map(({ name }, key) => {
                     return <li key={key} id={"completion" + key}>{key == props.completionIndex && "->"} {name} {key == props.completionIndex && "<-"} </li>
@@ -48,8 +47,7 @@ function Autocomplete(props) {
             <pre style={{ display: 'inline-block', flex: 1, verticalAlign: 'top', background: 'rgba(0, 0, 0, .3)' }}>
                 {doc}
             </pre>
-        </div>
-    </>;
+        </div>;
 }
 
 if (module.hot) {
