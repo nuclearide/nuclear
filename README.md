@@ -7,6 +7,8 @@
 
 Clone the repository
 
+**Node.js v8.0.0 is required for development. You can install it via [nvm](https://github.com/creationix/nvm)**
+
 ```bash
 $ yarn
 $ yarn run build-main
