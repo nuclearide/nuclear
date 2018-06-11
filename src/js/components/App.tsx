@@ -10,9 +10,10 @@ import { readdir, statSync } from "fs";
 import { join } from "path";
 import { USED_HOTKEYS } from "../utils/constants";
 import FileSearchModal from "./FileSearchModal";
-import { Nuclear } from "../lib/Nuclear";
+import { Nuclear, WindowEvents } from "../lib/Nuclear";
 import { settingsProvider, SettingsContext } from "../providers/SettingsProvider";
 import { Settings } from "./Settings";
+import { AddPropsModal } from "./AddPropsModal";
 
 export default class App extends React.Component<any, any> {
 
@@ -21,7 +22,9 @@ export default class App extends React.Component<any, any> {
         foundFiles: [],
         showFileSearchModal: false,
         path: '',
-        settings: settingsProvider.get()
+        settings: settingsProvider.get(),
+        showAddPropsModal: false,
+        previewProps: [],
     };
 
     private toggleState = (newState: object) => this.setState(newState);
@@ -65,6 +68,13 @@ export default class App extends React.Component<any, any> {
         }
     };
 
+    public applyPropsToPreview = (props: Array<{ name: string, type: string, value: string }>) => {
+        this.setState(
+            { previewProps: props, showAddPropsModal: false }, 
+            () => WindowEvents.emit('addprop')
+        )
+    }
+
     componentDidMount() {
         settingsProvider.on('change', () => {
             this.setState({ settings: settingsProvider.get() });
@@ -83,6 +93,11 @@ export default class App extends React.Component<any, any> {
                         foundFiles={this.state.foundFiles}
                         onSelect={this.handleSelectFile}
                     />
+                    <AddPropsModal
+                        onCancel={() => this.setState({ showAddPropsModal: false })}
+                        visible={this.state.showAddPropsModal}
+                        onSubmit={this.applyPropsToPreview}
+                    />
                     <Layout.Sider width={400}>
                         <br />
                         {this.state.loading ? <h4 style={{ marginLeft: 10 }}>Loading</h4> : null}
@@ -96,7 +111,10 @@ export default class App extends React.Component<any, any> {
                     </Layout.Sider>
                     <Layout.Content>
                         <TabBar />
-                        <Emulator />
+                        <Emulator
+                            previewProps={this.state.previewProps}
+                            openAddPropsModal={() => this.setState({ showAddPropsModal: true })}
+                        />
                         {/* <SettingsContext.Consumer>
                             {
                                 (val) => {

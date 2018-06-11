@@ -1,7 +1,7 @@
 import React from "react";
 import { Divider, Button, Spin, Icon, Row, Col, Tabs, Dropdown } from "antd";
 import * as path from "path";
-import { EditorEvents, Nuclear } from "../lib/Nuclear";
+import { EditorEvents, Nuclear, WindowEvents } from "../lib/Nuclear";
 import * as ts from "typescript";
 import { readFileSync, writeFileSync } from "fs";
 import { delint } from "../utils/delint";
@@ -11,11 +11,12 @@ import { ITerminal } from 'node-pty/lib/interfaces';
 import { Terminal } from 'xterm';
 import List from "antd/lib/list";
 import Menu from "antd/lib/menu";
+import { filterProp } from "../utils/filterProps";
 
 const electron = require('electron');
 const BrowserWindow = electron.remote.BrowserWindow;
 
-export default class Emulator extends React.Component<any, any> {
+export default class Emulator extends React.Component<{ openAddPropsModal: () => void, previewProps: object[] }, any> {
 
     terminalContainer: HTMLDivElement;
     term: Terminal;
@@ -57,6 +58,9 @@ export default class Emulator extends React.Component<any, any> {
             console.log("file at on", file);
             this.loadFile(file);
         });
+        WindowEvents.addListener('addprop', async () => {
+            await this.loadFile()
+        })
     }
     openPreview(file) {
         var exts = [".tsx", ".js", ".jsx"];
@@ -85,7 +89,7 @@ export default class Emulator extends React.Component<any, any> {
         let hasDefaultClass = true;
         let defaultClass = this.state.defaultClass || '';
         let selectedClass = '';
-        if (delinted.defaultExport && (this.state.selectDefaultClass || !this.state.selectedClass)) {
+        if (delinted.defaultExport) {
             availableClasses = delinted.classNames.filter(c => c !== delinted.defaultExport);
             selectedClass = delinted.defaultExport;
             defaultClass = delinted.defaultExport;
@@ -138,11 +142,13 @@ export default class Emulator extends React.Component<any, any> {
         };
         const Component = this.state.hasDefaultClass && this.state.defaultClass ? this.state.defaultClass : this.state.selectedClass;
         const filePath = `'../${path.relative(Nuclear.getProjectRoot(), file)}'`;
+        const filteredProps = this.props.previewProps.map(filterProp).join(' ');
+        console.log("filtered props", filteredProps);
         const template = `
             var React = require('react');
             ${getComponentImport(filePath, Component)}
             var render = require('react-dom').render;
-            render(<${Component}/>, document.getElementById("root"));
+            render(<${Component} ${filteredProps}/>, document.getElementById("root"));
 
             `;
         writeFileSync(path.resolve(Nuclear.getProjectRoot(), "preview/PreviewComponent.tsx"), template);
@@ -253,6 +259,7 @@ export default class Emulator extends React.Component<any, any> {
                                 }
                                 <Icon title={"Reload component container"} style={{ width: 50 }} onClick={this.reloadContainer} type="reload" />
                                 {this.w && <Icon title={"Toggle container devtools"} style={{ width: 50 }} onClick={this.toggleWebViewDevTools} type="select" />}
+                                {this.w && <Button onClick={this.props.openAddPropsModal}>Add props</Button>}
                             </Row>
                             <webview id={'previews'} style={{ height: '100%' }}></webview>
                         </Spin>
