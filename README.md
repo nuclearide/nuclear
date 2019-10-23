@@ -1,3 +1,7 @@
+# :warning: This project is no longer maintained :warning:
+
+If you are interested in restarting this project, please create an issue.
+
 ![Nuclear IDE](media/header.png)
 <div align="center">
     <h1>A Modern IDE for JavaScript</h1>
@@ -17,8 +21,6 @@ $ yarn dev-start
 ```
 
 ## Contributing
-
-[Join Our Discord Server](https://discord.gg/V6XVuMe)
 
 You can also see our [roadmap](https://github.com/nuclearide/nuclear/projects/1) for first release, take any ToDo card and make it. Help is greatly appreciated.
 
