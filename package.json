@@ -27,7 +27,7 @@
     "react-select": "^1.2.1",
     "src": "^1.1.2",
     "typescript": "^2.6.2",
-    "xterm": "^3.4.1"
+    "xterm": "^3.8.1"
   },
   "devDependencies": {
     "@types/codemirror": "^0.0.55",
