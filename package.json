@@ -37,7 +37,7 @@
     "@types/react": "^16.0.34",
     "@types/react-dom": "^16.0.3",
     "concurrently": "^3.5.1",
-    "electron": "^7.2.4",
+    "electron": "^9.4.0",
     "electron-builder": "^19.54.0",
     "electron-react-devtools": "^0.5.3",
     "husky": "^0.14.3",
