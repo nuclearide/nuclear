@@ -17,7 +17,7 @@
   "dependencies": {
     "antd": "^3.3.1",
     "babel-polyfill": "^6.26.0",
-    "codemirror": "^5.33.0",
+    "codemirror": "^5.58.2",
     "cross-env": "^5.1.4",
     "lodash": "^4.17.13",
     "node-pty": "^0.7.4",
